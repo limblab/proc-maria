@@ -11,7 +11,7 @@
 %% load data file
 %load legendinfo
 %load emg_array (aka emg array)
-load('emg_array_std.mat'); 
+load('standard.mat'); 
 legendinfo = {legendinfo{1:4} legendinfo{6:end}};
 emg_array = {emg_array{1:4} emg_array{6:end}};
 muscles = 1:length(emg_array); %can also pick and choose muscles to implement
@@ -22,7 +22,7 @@ pw = .2; %ms
 %colors = {[204 0 0], [255 125 37], [153 84 255],  [106 212 0], [0 102 51], [0 171 205], [0 0 153], [102 0 159], [64 64 64], [255 51 153], [253 203 0]};
 
 %% define thresholds and convert EMG to amplitude
-emglow_limit = [.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise
+emglow_limit = .24*ones(1, 10); %[.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise and co-contraction issues
 emghigh_limit = [1 1 1 1 1 1 1 1 1 1]; %get rid of excessively high spikes
 amplow_limit = [1.1 1.2 1.4 1.5 .3 .1 0 1 1 1]; %lowest level of stim to twitch (err on low side)
 amphigh_limit = [2.3 2.2 2 2.4 .9 .6 0 2.4 2 2.8];  %highest level of stim to use
@@ -85,7 +85,7 @@ while exist([filepath dayname '/' datestr(now, 'yyyymmdd') '_' num2str(i,'%03d')
 end
 save([filepath dayname '/' datestr(now, 'yyyymmdd') '_' num2str(i,'%03d') '.mat'], ...
     'muscles', 'legendinfo', 'repeats', 'slowdown_factor', 'amp_adjust', 'stim_update', 'stim_freq', 'original_freq', ...
-    'emg_array', 'amplow_limit', 'amphigh_limit', 'pw', 'current_arr');
+    'emg_array', 'emglow_limit', 'emghigh_limit', 'amplow_limit', 'amphigh_limit', 'pw', 'current_arr');
 
 
 %% Call stimulation based on array

@@ -134,7 +134,8 @@ end
 %TODO: remove save button from gui
 %find length of time needed to pause so stimulation can complete a cycle: 
 
-array_stim(current_arr, 20, 40, 40, 1, pws{1}, index, num_cycles, muscles(index), 'COM4'); 
+%array_stim(current_array, sending_freq, stim_freq, sampled_freq, stretch_factor, pw, channels, repeats, muscle_names, com_port)
+array_stim(current_arr, 20, freq, 40, 1, pws{1}, index, num_cycles, muscles(index), 'COM4'); 
 
 disp('done stimulating'); 
 %TODO: cleanup. 
