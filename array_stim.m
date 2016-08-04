@@ -55,7 +55,7 @@ if ~exist('ws', 'var')
     'dbg_lvl', 1, ...
     'comm_timeout_ms', 100, ... %-1 for no timeout
     'blocking', false, ... %change this
-    'zb_ch_page', 0 ...%change this
+    'zb_ch_page', 2 ...%change this
     ); 
 
     ws = wireless_stim(ws_struct); 
@@ -104,6 +104,10 @@ ws.set_Run(ws.run_cont, channels);
 %I need to actually stimulate! using a while loop with tic and toc ugh.
 
 for steps=1:repeats %take as many steps as is specified
+    %add pause if desired
+    ws.set_Run(ws.run_stop, channels);
+    pause(.1); 
+    ws.set_Run(ws.run_cont, channels);
     for i=1:length(ds_array{1})%for every data point
         a = tic;
         for j = 1:size(ds_array, 2) %for every muscle

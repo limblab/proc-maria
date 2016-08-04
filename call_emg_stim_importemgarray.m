@@ -14,18 +14,18 @@
 load('standard.mat'); 
 legendinfo = {legendinfo{1:4} legendinfo{6:end}};
 emg_array = {emg_array{1:4} emg_array{6:end}};
-muscles = 1:length(emg_array); %can also pick and choose muscles to implement
+muscles = [5 6 1 2 4 7 9];%1:length(emg_array); %can also pick and choose muscles to implement
 
 %define non-given parameters:
-channels = [5 6 7 8 9 10 2 3 4 1];
+channels = [10 9 1 3 7 4 8];
 pw = .2; %ms
 %colors = {[204 0 0], [255 125 37], [153 84 255],  [106 212 0], [0 102 51], [0 171 205], [0 0 153], [102 0 159], [64 64 64], [255 51 153], [253 203 0]};
 
 %% define thresholds and convert EMG to amplitude
-emglow_limit = .24*ones(1, 10); %[.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise and co-contraction issues
-emghigh_limit = [1 1 1 1 1 1 1 1 1 1]; %get rid of excessively high spikes
-amplow_limit = [1.1 1.2 1.4 1.5 .3 .1 0 1 1 1]; %lowest level of stim to twitch (err on low side)
-amphigh_limit = [2.3 2.2 2 2.4 .9 .6 0 2.4 2 2.8];  %highest level of stim to use
+emglow_limit = .19*ones(1, length(channels)); %[.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise and co-contraction issues
+emghigh_limit = 1*ones(1, length(channels)); %get rid of excessively high spikes
+amplow_limit = [.4 .4 .9 1.2 1.4 1.7 1.4]; %lowest level of stim to twitch (err on low side)
+amphigh_limit = [1.8 1.5 1.9 2.4 2.4 2.4 2.7];  %highest level of stim to use
 
 %check that limits are all defined
 
@@ -51,8 +51,8 @@ end
 %TODO: figure out best stretch factor
 %choose number of time
 repeats = 11; %number of times to repeat the cycle
-slowdown_factor = 5; %three seems to be pretty much a normal length step. Kind of.
-amp_adjust = [.8 .8 .8 .8 .8 .8 .8 .8 .8 .8 1.3];
+slowdown_factor = 4; %three seems to be pretty much a normal length step. Kind of.
+amp_adjust = 1;
 
 if length(amp_adjust)>1 %if using an array of amplitude adjustment
     for i=1:length(current_arr)
@@ -69,7 +69,7 @@ for i=1:length(current_arr)
 end
 legend(legendinfo);
 
-stim_update = 20; stim_freq = 40; original_freq = 5000;
+stim_update = 20; stim_freq = 60; original_freq = 5000;
 
 %% save original array (emg_array), repeats, slowdown factor, current
 %adjustment, current array, muscles, and legend. Autoincrements.
@@ -89,7 +89,7 @@ save([filepath dayname '/' datestr(now, 'yyyymmdd') '_' num2str(i,'%03d') '.mat'
 
 
 %% Call stimulation based on array
-array_stim(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, 'COM4');
+array_stim(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, 'COM5');
 
 %TODO: array-based stim fxn with freq modulation
 
