@@ -1,4 +1,4 @@
-function array_stim(current_array, sending_freq, stim_freq, sampled_freq, stretch_factor, pw, channels, repeats, muscle_names, com_port)
+function array_stim(current_array, sending_freq, stim_freq, sampled_freq, stretch_factor, pw, channels, repeats, muscle_names, pause_time, com_port)
 %current_array should be in the form of a matrix of arrays that each have
 %averaged, filtered EMG data to be sent to the corresponding channel
 %pw: in ms, freqs: in hz, currents in current_array: in mA (mA and ms will
@@ -29,17 +29,17 @@ end
 %TODO: figure out a way to plot this so it shows the intermediate points
 %(so if it's stimulating at 40Hz, and the sample is assumed to be at 100
 %hz, it shows the point in between. wait. uhm.)
-% 
+%
 
-% 
+%
 % %plotting info
 % for i=1:size(ds_array, 2)
 %     temp{i} = repmat(ds_array{i}',1, 2)';
 %     temp{i} = temp{i}(:)'
-%     %hold on; 
-%     %plot(temp{i}, 'color', colors{i}/255, 'linewidth', 2.5); 
+%     %hold on;
+%     %plot(temp{i}, 'color', colors{i}/255, 'linewidth', 2.5);
 % end
-% %aleg = legend(muscle_names); 
+% %aleg = legend(muscle_names);
 % %set(aleg,'FontSize',18);
 
 length_stim = size(ds_array{1}, 2)/sending_freq; %gets the number of seconds being spent stimulating
@@ -51,15 +51,15 @@ if ~exist('ws', 'var')
     %ws.init(1, ws.comm_timeout_disable);
     
     ws_struct = struct(...
-    'serial_string', com_port,...
-    'dbg_lvl', 1, ...
-    'comm_timeout_ms', 100, ... %-1 for no timeout
-    'blocking', false, ... %change this
-    'zb_ch_page', 2 ...%change this
-    ); 
-
-    ws = wireless_stim(ws_struct); 
-    ws.init(); 
+        'serial_string', com_port,...
+        'dbg_lvl', 1, ...
+        'comm_timeout_ms', 100, ... %-1 for no timeout
+        'blocking', false, ... %change this
+        'zb_ch_page', 2 ...%change this
+        );
+    
+    ws = wireless_stim(ws_struct);
+    ws.init();
 end
 
 %set train delay so I have staggered pulses
@@ -91,8 +91,8 @@ command{1} = struct('Freq', stim_freq, ...        % Hz
     ); %kind of strange to put this here, need to define the amps to all be zero first TODO
 
 if length(channels)>7
-    ws.set_stim(command, channels(1:6)); 
-    ws.set_stim(command, channels(7:end)); 
+    ws.set_stim(command, channels(1:6));
+    ws.set_stim(command, channels(7:end));
 else
     ws.set_stim(command, channels);
 end
@@ -105,9 +105,11 @@ ws.set_Run(ws.run_cont, channels);
 
 for steps=1:repeats %take as many steps as is specified
     %add pause if desired
-    ws.set_Run(ws.run_stop, channels);
-    pause(.1); 
-    ws.set_Run(ws.run_cont, channels);
+    if pause_time>0
+        ws.set_Run(ws.run_stop, channels);
+        pause(pause_time);
+        ws.set_Run(ws.run_cont, channels);
+    end
     for i=1:length(ds_array{1})%for every data point
         a = tic;
         for j = 1:size(ds_array, 2) %for every muscle

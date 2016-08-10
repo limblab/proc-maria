@@ -1,4 +1,4 @@
-function rec_curve(start_amp, end_amp, increment, channel, stim_freq, pw, pause_time)
+function rec_curve(start_amp, end_amp, increment, channel, stim_freq, pw, pause_time, com_port)
 
 %initiate wireless stimulator object
 if ~exist('ws', 'var')
@@ -9,7 +9,7 @@ if ~exist('ws', 'var')
         'serial_string', com_port,...
         'dbg_lvl', 1, ...
         'comm_timeout_ms', 100, ... %-1 for no timeout
-        'blocking', false, ... %change this
+        'blocking', false, ... %change this?
         'zb_ch_page', 2 ...%change this to ideal parameter
         );
     
