@@ -55,7 +55,7 @@ if ~exist('ws', 'var')
         'dbg_lvl', 1, ...
         'comm_timeout_ms', 100, ... %-1 for no timeout
         'blocking', false, ... %change this
-        'zb_ch_page', 2 ...%change this
+        'zb_ch_page', 5 ...%change this
         );
     
     ws = wireless_stim(ws_struct);
