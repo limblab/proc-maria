@@ -9,122 +9,69 @@
 
 
 %% load data file
-emg_file = 'EMGdata';
-load(emg_file);
-%musc_names = {'gluteus max', 'gluteus med', 'gastroc', 'vastus lat', 'biceps fem A',...
-%    'biceps fem PR', 'biceps fem PC', 'tib ant', 'rect fem', 'vastus med', 'adduct mag', ...
-%    'semimemb', 'gracilis R', 'gracilis C', 'semitend'};
-musc_names = {'GS', ... %1
-    'Gmed',...%2
-    'LG',...%3
-    'VL',...%4
-    'BFa',...%5
-        'BFpr',...%6
-        'BFpc',...%7
-        'TA',...%8
-        'RF',...%9
-        'VM',...%10
-        'AM', ...%11
-        'SM',...%12
-        'GRr',...%13
-        'GRc',...%14
-        'ST'}; %15
-%good and bad channels (1 is good, 0 is bad)
-goodChannelsWithBaselines =  [ 1 ,  0 ,  0 , 0 , 1 , 1 ,  1 ,  0 , 1 , 1 , 0 , 0 , 1 , 1 , 1 ;...
-    0 ,  1 ,  1 , 1 , 1 , 1 ,  1 ,  1 , 1 , 1 , 0 , 1 , 0 , 1 , 0 ;...
-    1 ,  0 ,  1 , 1 , 1 , 0 ,  1 ,  1 , 1 , 1 , 0 , 0 , 1 , 1 , 0 ;...
-    1 ,  0 ,  1 , 0 , 1 , 1 ,  1 ,  1 , 0 , 0 , 0 , 0 , 0 , 1 , 1 ;...
-    1 ,  1 ,  1 , 0 , 1 , 1 ,  1 ,  1 , 1 , 0 , 0 , 1 , 1 , 1 , 0 ;...
-    1 ,  1 ,  0 , 1 , 1 , 1 ,  1 ,  1 , 1 , 0 , 0 , 1 , 0 , 1 , 0 ;...
-    1 ,  0 ,  1 , 1 , 1 , 1 ,  1 ,  1 , 1 , 1 , 0 , 1 , 0 , 1 , 1 ;...
-    1 ,  0 ,  1 , 1 , 0 , 1 ,  1 ,  1 , 1 , 1 , 0 , 0 , 1 , 1 , 1 ];
+%load legendinfo
+%load emg_array (aka emg array)
+load('standard.mat'); 
+legendinfo = {legendinfo{1:4} legendinfo{6:end}};
+emg_array = {emg_array{1:4} emg_array{6:end}};
+muscles = [5 6 1 2 4 7 9];%1:length(emg_array); %can also pick and choose muscles to implement
 
-animals = [1:8];
-muscles = [1 4 6 8 3 12 15];
-n = 4;
-Wn = 30/(5000/2); %butter parameters (30 Hz)
-channels = [2 6 8 7 9 3 5];
+%define non-given parameters:
+channels = [10 9 1 3 7 4 8];
 pw = .2; %ms
-
-mus_mean = {};
-%rawCycleData{animal, step}(:, muscle)
-
-%get average of low pass filtered emgs
-for i=1:length(muscles)
-    %figure; hold on;
-    for j=1:length(animals)
-        if goodChannelsWithBaselines(animals(j), muscles(i))
-            filtered = filter_emgs(rawCycleData, animals(j), muscles(i), n, Wn);
-            %plot(filtered);
-            mus_mean{i, j} = mean(filtered);
-            %plot(mean(filtered));
-        end
-    end
-end
-%can now reference a specific filtered average with mus_mean{muscle, animal}
-%plot(mus_mean{1,1}); hold on;
-
+%colors = {[204 0 0], [255 125 37], [153 84 255],  [106 212 0], [0 102 51], [0 171 205], [0 0 153], [102 0 159], [64 64 64], [255 51 153], [253 203 0]};
 
 %% define thresholds and convert EMG to amplitude
-emglow_limit = [.15 .13 .13 .13 .13 .13 .13]; %get rid of low noise
-emghigh_limit = [1 1 1 1 1 1 1]; %get rid of excessively high spikes
-amplow_limit = [1 1 1.4 .5 .5 .8 1.2]; %lowest level of stim to twitch (err on low side)
-amphigh_limit = [2 2.3 2 1 1.4 2 2];  %highest level of stim to use
+emglow_limit = .19*ones(1, length(channels)); %[.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise and co-contraction issues
+emghigh_limit = 1*ones(1, length(channels)); %get rid of excessively high spikes
+amplow_limit = [.4 .4 .9 1.2 1.4 1.7 1.4]; %lowest level of stim to twitch (err on low side)
+amphigh_limit = [1.8 1.5 1.9 2.4 2.4 2.4 2.7];  %highest level of stim to use
 
 %check that limits are all defined
-%NOTE: this doesn't check number of channels because I might need to make
-%up some arrays for certain muscles (particularly IP)
+
 lm = length(muscles);
-if lm~=length(emglow_limit) || lm~=length(emghigh_limit) || lm~=length(amplow_limit) || lm~=length(amphigh_limit)
+if lm~=length(emglow_limit) || lm~=length(emghigh_limit) || lm~=length(amplow_limit) || lm~=length(amphigh_limit) || lm~=length(channels); 
+    disp(['emglow_limit: ' num2str(length(emglow_limit)) char(10) 'emghigh_limit: ' num2str(length(emghigh_limit))]);
+    disp(['amplow_limit: ' num2str(length(amplow_limit)) char(10) 'amphigh_limit: ' num2str(length(amphigh_limit))]);
     error('Number of muscles does not match number of values in arrays for EMG and current thresholds; check that there is one value per muscle.')
 end
 
-%TODO: deal with confusing numbering system for emgs here. should I average
-%together different muscles before stimulation? YES
-
 clear('current_arr');
+
 %figure; hold on;
-colors = {[204 0 0], [255 125 37], [153 84 255],  [106 212 0], [0 102 51], [0 171 205], [0 0 153], [102 0 159], [64 64 64], [255 51 153], [253 203 0]};
 for i=1:length(muscles)
     %cycle through each muscle we'll be stimulating, find the mean of the
     %filtered EMGs, and find the conversion to amplitude of current
-    a = mus_mean(i, :);
-    a = a(~cellfun('isempty', a));
-    ds_mat = norm_mat(dnsamp(a).');
-    clear('a');
-    ds_means{i} = mean(ds_mat.');
-    current_arr{i} = emg2amp(ds_means{i}, emglow_limit(i), emghigh_limit(i), amplow_limit(i), amphigh_limit(i));
-%     plot(ds_means{i}, 'linewidth', 2, 'color', colors{i}/255);
-    legendinfo{i} = musc_names{muscles(i)};
+    current_arr{i} = emg2amp(emg_array{i}, emglow_limit(i), emghigh_limit(i), amplow_limit(i), amphigh_limit(i));
+    %plot(current_arr{i}); 
 end
 
-%make IP array
-% ip_arr = mean([ds_means{1}; ds_means{6}; ds_means{9}]); 
-% ip_emg_low = .13; ip_emg_high = 1; ip_amp_low = 1.5; ip_amp_high = 3.0; 
-% current_arr{length(channels)} = emg2amp(ip_arr, ip_emg_low, ip_emg_high, ip_amp_low, ip_amp_high); 
-% legendinfo{length(channels)} = 'IP';
-%plot(ip_arr, 'k', 'linewidth', 2); 
-%add legend
-%legend(legendinfo);
 
 %% Define parameters to be used to run the stimulation cycle (number of runs, length of runs, etc)
 %TODO: figure out best stretch factor
 %choose number of time
 repeats = 11; %number of times to repeat the cycle
-slowdown_factor = 6; %three seems to be pretty much a normal length step. Kind of.
-amp_adjust = [1.7 1 .9 1.4 1 1.3 1.3];
+slowdown_factor = 4; %three seems to be pretty much a normal length step. Kind of.
+amp_adjust = 1;
+
 if length(amp_adjust)>1 %if using an array of amplitude adjustment
     for i=1:length(current_arr)
         %plot(current_arr{i}); hold on;
-        current_arr{i} = current_arr{i}*amp_adjust(i);
-        %plot(current_arr{i}); 
+        current_arr{i} = current_arr{i}*amp_adjust(i); 
     end
 else
     current_arr = cellfun(@(x) x*amp_adjust, current_arr, 'UniformOutput', false);
 end
-stim_update = 20; stim_freq = 40; original_freq = 5000;
 
-%% save original array (ds_means), repeats, slowdown factor, current
+figure; hold on;
+for i=1:length(current_arr)
+    plot(current_arr{i});
+end
+legend(legendinfo);
+
+stim_update = 20; stim_freq = 60; original_freq = 5000;
+
+%% save original array (emg_array), repeats, slowdown factor, current
 %adjustment, current array, muscles, and legend. Autoincrements.
 filepath = 'C:\Users\mkj605\Documents\stimulation\';
 dayname = datestr(now, 'yyyymmdd');
@@ -138,11 +85,12 @@ while exist([filepath dayname '/' datestr(now, 'yyyymmdd') '_' num2str(i,'%03d')
 end
 save([filepath dayname '/' datestr(now, 'yyyymmdd') '_' num2str(i,'%03d') '.mat'], ...
     'muscles', 'legendinfo', 'repeats', 'slowdown_factor', 'amp_adjust', 'stim_update', 'stim_freq', 'original_freq', ...
-    'ds_means', 'amplow_limit', 'amphigh_limit', 'pw', 'current_arr');
+    'emg_array', 'emglow_limit', 'emghigh_limit', 'amplow_limit', 'amphigh_limit', 'pw', 'current_arr');
 
 
 %% Call stimulation based on array
-array_stim(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, 'COM4');
+pause_between = 0; 
+array_stim(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, pause_between, 'COM5');
 
 %TODO: array-based stim fxn with freq modulation
 
