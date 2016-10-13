@@ -63,7 +63,7 @@ if ~exist('ws', 'var')
 end
 
 %set train delay so I have staggered pulses
-for i=length(channels)
+for i=1:length(channels)
     ws.set_TD(50+500*i, channels(i));
 end
 

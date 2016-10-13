@@ -96,70 +96,70 @@ legendinfo{end+1} = 'IP';
 
 
 %% Add in a gaussian curve to one of the muscles
-% %hmm. average? kind of a weighted average? (IN ALL REGIONS where the
-% %y-value of the gaussian is greater than the y-value of the emg array)
-%
-% calculate the curve itself
-% c = 1.4; %1/c = height of peak %2.7
-% mu = 300; %mu is the x-location of the peak
-% peakwidth = 150; %width from peak to intercept with emglow_limit (noise threshold)
-% emglow_limit = .13; %to set omega so that the graph intercepts at the emg threshold
-% omega = sqrt(-peakwidth^2/log(emglow_limit/c));
-% x = linspace(0, length(emg_array{2}), length(emg_array{2})).'; %values of x
-% 
-% y = (1/c * exp(-((x-mu).^2)/omega^2)).';
-% 
-% %plot(y);
-% 
-% % then I can either average the two plots together
-% emg_array{2} = mean([emg_array{2}; y])*1.6;
-%
-% %or I can only insert the gaussian where it's greater than the original
+%hmm. average? kind of a weighted average? (IN ALL REGIONS where the
+%y-value of the gaussian is greater than the y-value of the emg array)
+
+%calculate the curve itself
+c = 2.2; %1/c = height of peak %2.7
+mu = 350; %mu is the x-location of the peak
+peakwidth = 150; %width from peak to intercept with emglow_limit (noise threshold)
+emglow_limit = .13; %to set omega so that the graph intercepts at the emg threshold
+omega = sqrt(-peakwidth^2/log(emglow_limit/c));
+x = linspace(0, length(emg_array{2}), length(emg_array{2})).'; %values of x
+
+y = (1/c * exp(-((x-mu).^2)/omega^2)).';
+
+%plot(y);
+
+% then I can either average the two plots together
+emg_array{2} = mean([emg_array{2}; y])*1.6;
+
+%or I can only insert the gaussian where it's greater than the original
 % indices = find(emg_array{10}<y);
 % emg_array{10}(indices) = y(indices);
 
 %% Remove overlap between a set of channels
-ch1 = 6; 
-ch2 = 7; 
-indices = find(emg_array{ch1}<emg_array{ch2}); 
-emg_array{ch1}(indices) = 0; 
-indices = find(emg_array{ch2}<emg_array{ch1}); 
-emg_array{ch2}(indices) = 0; 
-
-ch1 = 1; 
-ch2 = 3; 
-indices = find(emg_array{ch1}<emg_array{ch2}); 
-emg_array{ch1}(indices) = 0; 
-indices = find(emg_array{ch2}<emg_array{ch1}); 
-emg_array{ch2}(indices) = 0; 
-
-ch1 = 3; 
-ch2 = 11; 
-indices = find(emg_array{ch1}<emg_array{ch2}); 
-emg_array{ch1}(indices) = 0; 
-indices = find(emg_array{ch2}<emg_array{ch1}); 
-emg_array{ch2}(indices) = 0; 
-
-ch1 = 2; 
-ch2 = 10; 
-indices = find(emg_array{ch1}<emg_array{ch2}); 
-emg_array{ch1}(indices) = 0; 
-indices = find(emg_array{ch2}<emg_array{ch1}); 
-emg_array{ch2}(indices) = 0; 
+% ch1 = 6; 
+% ch2 = 7; 
+% indices = find(emg_array{ch1}<emg_array{ch2}); 
+% emg_array{ch1}(indices) = 0; 
+% indices = find(emg_array{ch2}<emg_array{ch1}); 
+% emg_array{ch2}(indices) = 0; 
+% 
+% ch1 = 1; 
+% ch2 = 3; 
+% indices = find(emg_array{ch1}<emg_array{ch2}); 
+% emg_array{ch1}(indices) = 0; 
+% indices = find(emg_array{ch2}<emg_array{ch1}); 
+% emg_array{ch2}(indices) = 0; 
+% 
+% ch1 = 3; 
+% ch2 = 11; 
+% indices = find(emg_array{ch1}<emg_array{ch2}); 
+% emg_array{ch1}(indices) = 0; 
+% indices = find(emg_array{ch2}<emg_array{ch1}); 
+% emg_array{ch2}(indices) = 0; 
+% 
+% ch1 = 2; 
+% ch2 = 10; 
+% indices = find(emg_array{ch1}<emg_array{ch2}); 
+% emg_array{ch1}(indices) = 0; 
+% indices = find(emg_array{ch2}<emg_array{ch1}); 
+% emg_array{ch2}(indices) = 0; 
 
 %% "Squish" part of the array relative to the other
-% scale_fact = 0; %scale the indices selected by this factor
-% scale_start = 300; %indices to scale from the array as it exists
-% scale_end = length(emg_array{1});
-% 
-% x = 1:1:(scale_end-scale_start+1);
-% xq = 1/scale_fact:1/scale_fact:(scale_end-scale_start);
-% 
-% for i=1:length(emg_array)
-%     scaled = interp1(x, emg_array{i}(scale_start:scale_end), xq);
-%     emg_array{i} = [emg_array{i}(1:scale_start) scaled];
-%     
-% end
+scale_fact = .5; %scale the indices selected by this factor
+scale_start = 300; %indices to scale from the array as it exists
+scale_end = length(emg_array{1});
+
+x = 1:1:(scale_end-scale_start+1);
+xq = 1/scale_fact:1/scale_fact:(scale_end-scale_start);
+
+for i=1:length(emg_array)
+    scaled = interp1(x, emg_array{i}(scale_start:scale_end), xq);
+    emg_array{i} = [emg_array{i}(1:scale_start) scaled];
+    
+end
 
 %% Plot
 
