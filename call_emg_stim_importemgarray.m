@@ -11,21 +11,24 @@
 %% load data file
 %load legendinfo
 %load emg_array (aka emg array)
-load('no_cocont.mat'); 
+%make sure you're running this code in stim_arrays location
+load('stance_twothirds.mat'); 
 legendinfo = {legendinfo{1:4} legendinfo{6:end}};
 emg_array = {emg_array{1:4} emg_array{6:end}};
-muscles = [1 2 3 4 5 6 10 7 9];%1:length(emg_array); %can also pick and choose muscles to implement
+muscles = [1:7 9 10]; %1:length(emg_array); %can also pick and choose muscles to implement
+
 
 %define non-given parameters:
-channels = [2 4 6 8 9 10 1 3 7];
+channels = [2 4 6 8 9 5 3 7 1];
 pw = .2; %ms
 %colors = {[204 0 0], [255 125 37], [153 84 255],  [106 212 0], [0 102 51], [0 171 205], [0 0 153], [102 0 159], [64 64 64], [255 51 153], [253 203 0]};
 
 %% define thresholds and convert EMG to amplitude
-emglow_limit = .13*ones(1, length(channels)); %[.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise and co-contraction issues
+%define in the same order as 'muscles' array
+emglow_limit = .16*ones(1, length(channels)); %[.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise and co-contraction issues
 emghigh_limit = 1*ones(1, length(channels)); %get rid of excessively high spikes
-amplow_limit = [.6 .5 .6 .8 .6 .7 .5 1 1]; %lowest level of stim to twitch (err on low side)
-amphigh_limit = [2 3 2.2 2 1.6 1.8 2.1 3.2 2.8];  %highest level of stim to use
+amplow_limit = [1.1 .7 .2 1.4 .4 .6 1 1.5 .4]; %lowest level of stim to twitch (err on low side)
+amphigh_limit = [2.8 1.8 1 2 1.2 2 3.5 2.2 2.5];  %highest level of stim to use
 
 %check that limits are all defined
 
@@ -42,7 +45,7 @@ clear('current_arr');
 for i=1:length(muscles)
     %cycle through each muscle we'll be stimulating, find the mean of the
     %filtered EMGs, and find the conversion to amplitude of current
-    current_arr{i} = emg2amp(emg_array{i}, emglow_limit(i), emghigh_limit(i), amplow_limit(i), amphigh_limit(i));
+    current_arr{i} = emg2amp(emg_array{muscles(i)}, emglow_limit(i), emghigh_limit(i), amplow_limit(i), amphigh_limit(i));
     %plot(current_arr{i}); 
 end
 
@@ -52,8 +55,9 @@ end
 %choose number of time
 repeats = 11; %number of times to repeat the cycle
 slowdown_factor = 4; %three seems to be pretty much a normal length step. Kind of.
-amp_adjust = .8*ones(1, length(channels));
-amp_adjust([7 9]) = 1.2; 
+amp_adjust = 1.2*ones(1, length(channels));
+%amp_adjust([8]) = 1.2; 
+%amp_adjust([8 9]) = 1.4; 
 %amp_adjust = 1; 
 
 if length(amp_adjust)>1 %if using an array of amplitude adjustment
@@ -67,11 +71,11 @@ end
 
 figure; hold on;
 for i=1:length(current_arr)
-    plot(current_arr{i});
+    plot(current_arr{i}, 'linewidth', 2);
 end
 legend(legendinfo{muscles});
 
-stim_update = 20; stim_freq = 60; original_freq = 5000;
+stim_update = 30; stim_freq = 60; original_freq = 5000;
 
 %% save original array (emg_array), repeats, slowdown factor, current
 %adjustment, current array, muscles, and legend. Autoincrements.
