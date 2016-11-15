@@ -19,6 +19,7 @@ function stimdaq
     priorPorts = instrfind; % finds any existing Serial Ports in MATLAB
     delete(priorPorts); % and deletes them 
     
+    %initialize Ripple wireless stimulator object
     if ~exist('ws_object', 'var')
         disp('Creating wireless stimulator object...');
         %ws = wireless_stim(com_port, 1); %the number has to do with verbosity of running feedback

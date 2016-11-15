@@ -5,14 +5,14 @@ cd(folder);
 fig_folder = '../../../../figures/';
 %% Define files to load
 %161006, 4 - ready
-filedate = '160811';
+filedate = '160908';
 %filename = '16-07-26';
 %ratName = '16-09-02';
 ratName = [filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)];
 sample_freq = 100; %give this value in Hz
 pathName = ['../../../../data/kinematics/' filedate '_files/'];
 filenum = 5; %can input an array if desired
-make_graphs = [2];
+make_graphs = [1];
 saving = false;
 animate = false;
 recruit = true;
@@ -28,12 +28,12 @@ for fileind=1:length(filenum) %so I can do batches- all files for a given day
     tdmMks  = {};
     %ratMks = {'hip_top', 'hip_center' , 'hip_bottom', 'knee', 'heel', 'metatarsal', 'phalanx'}
     %    ratMks = {'hip_center', 'hip_top', 'hip_bottom', 'knee', 'heel', 'toe'}
-         ratMks  = {'spine_top','spine_bottom','hip_top','hip_bottom', ...
-              'hip_middle', 'knee', 'heel', 'foot_mid', 'toe'};
+%          ratMks  = {'spine_top','spine_bottom','hip_top','hip_bottom', ...
+%               'hip_middle', 'knee', 'heel', 'foot_mid', 'toe'};
     %     ratMks  = {'spine_top','spine_bottom','hip_top','hip_bottom', ...
     %          'hip_middle', 'knee', 'heel', 'foot_mid', 'toe', 'wheel1', 'wheel2'};
-    %        ratMks  = {'spine_top','spine_bottom','hip_top', 'hip_middle', 'hip_bottom', ...
-    %             'femur_mid', 'knee', 'tibia_mid', 'heel', 'foot_mid', 'toe', 'reference_a', 'reference_p', 'wheel1', 'wheel2'};
+           ratMks  = {'spine_top','spine_bottom','hip_top', 'hip_middle', 'hip_bottom', ...
+                'femur_mid', 'knee', 'tibia_mid', 'heel', 'foot_mid', 'toe', 'reference_a', 'reference_p', 'wheel1', 'wheel2'};
     %ratMks  = {'spine_top','spine_bottom','hip_top', 'hip_middle', 'hip_bottom', ...
     %    'femur_mid', 'knee', 'tibia_mid', 'heel', 'foot_mid', 'toe', 'reference_a', 'reference_p'};
     [events,rat,treadmill] = ...
@@ -288,6 +288,38 @@ for fileind=1:length(filenum) %so I can do batches- all files for a given day
             patch(x_rect, y_rect, z_rect, [.9 .9 .9], 'EdgeColor', 'none')
             ylabel([lbls(i) '(what units??)']);
             xlabel('Time (s)');
+        end
+    end
+    
+        %% 5. Alternate - Average Y vs % of step cycle
+    if ismember(5, make_graphs)
+        %split the array according to beginning of every swing phase
+        lbls = {'\Delta height (mm)'};
+        plot5 = figure(5);
+        set(plot5, 'Position', [50 500 1000 400]);
+        for i=1:length(lbls)
+            hold on;
+            len_sw = zeros(1, length(swing_times));
+            all_sw = cell(1, length(swing_times)-1);
+            a = track_marker(:, 2);
+            for j=1:length(swing_times)-1
+                all_sw{j} = a(swing_times{j}(1):swing_times{j+1}(1));
+                len_sw(j) = swing_times{2}(2)-swing_times{2}(1);
+            end
+            %interpolate so they're all the same length
+            ds = dnsamp(all_sw);
+            xvals = 100/size(ds, 2):100/size(ds, 2):100;
+            yvals = mean(ds, 'omitnan');
+            first_y = yvals(1);
+            y = filt_nodelay(yvals-first_y, size(ds, 2)/100, .05);
+            
+            plot(xvals, y, 'linewidth', 3); %average together each step
+            
+            ax = gca;
+            ax.FontSize = 24; 
+            ylabel(lbls(1)); 
+            xlabel('% step cycle');
+            
         end
     end
     
