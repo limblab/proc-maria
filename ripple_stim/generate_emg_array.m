@@ -98,21 +98,21 @@ legendinfo{end+1} = 'IP';
 %% Add in a gaussian curve to one of the muscles
 %hmm. average? kind of a weighted average? (IN ALL REGIONS where the
 %y-value of the gaussian is greater than the y-value of the emg array)
-
-%calculate the curve itself
-c = 2.2; %1/c = height of peak %2.7
-mu = 350; %mu is the x-location of the peak
-peakwidth = 150; %width from peak to intercept with emglow_limit (noise threshold)
-emglow_limit = .13; %to set omega so that the graph intercepts at the emg threshold
-omega = sqrt(-peakwidth^2/log(emglow_limit/c));
-x = linspace(0, length(emg_array{2}), length(emg_array{2})).'; %values of x
-
-y = (1/c * exp(-((x-mu).^2)/omega^2)).';
-
-%plot(y);
-
-% then I can either average the two plots together
-emg_array{2} = mean([emg_array{2}; y])*1.6;
+% 
+% %calculate the curve itself
+% c = 1.5; %1/c = height of peak %2.7
+% mu = 250; %mu is the x-location of the peak
+% peakwidth = 150; %width from peak to intercept with emglow_limit (noise threshold)
+% emglow_limit = .13; %to set omega so that the graph intercepts at the emg threshold
+% omega = sqrt(-peakwidth^2/log(emglow_limit/c));
+% x = linspace(0, length(emg_array{2}), length(emg_array{2})).'; %values of x
+% 
+% y = (1/c * exp(-((x-mu).^2)/omega^2)).';
+% 
+% %plot(y);
+% 
+% % then I can either average the two plots together
+% emg_array{2} = mean([emg_array{2}; y])*1.6;
 
 %or I can only insert the gaussian where it's greater than the original
 % indices = find(emg_array{10}<y);
@@ -178,7 +178,7 @@ if ~strcmp(usr_in, 'n')
     disp('Saving.'); 
     p = mfilename('fullpath');
     [pathstr, name, ext] = fileparts(p);
-    pathstr = [pathstr '/..' '/../' 'stim_arrays/'];
+    pathstr = [pathstr '/../..' '/../' 'stim_arrays/'];
     save([pathstr usr_in], 'legendinfo', 'emg_array');
 end
 

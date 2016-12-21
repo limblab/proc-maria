@@ -5,17 +5,19 @@ cd(folder);
 fig_folder = '../../../../figures/';
 %% Define files to load
 %161006, 4 - ready
-filedate = '160908';
+filedate = 'bfarun2_';
 %filename = '16-07-26';
-%ratName = '16-09-02';
-ratName = [filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)];
+ratName = '16-11-01';
+%ratName = [filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)];
 sample_freq = 100; %give this value in Hz
-pathName = ['../../../../data/kinematics/' filedate '_files/'];
-filenum = 5; %can input an array if desired
-make_graphs = [1];
+pathName = ['../../../../data/kinematics/'  'bfarun_files/'];
+%pathName = ['../../../../data/kinematics/' filedate '_files/'];
+filenum = 11; %can input an array if desired
+make_graphs = [];
 saving = false;
 animate = false;
-recruit = true;
+recruit = false;
+split_steps = false; 
 hist = false;
 hists = {};
 gapfill = false;
@@ -33,7 +35,7 @@ for fileind=1:length(filenum) %so I can do batches- all files for a given day
     %     ratMks  = {'spine_top','spine_bottom','hip_top','hip_bottom', ...
     %          'hip_middle', 'knee', 'heel', 'foot_mid', 'toe', 'wheel1', 'wheel2'};
            ratMks  = {'spine_top','spine_bottom','hip_top', 'hip_middle', 'hip_bottom', ...
-                'femur_mid', 'knee', 'tibia_mid', 'heel', 'foot_mid', 'toe', 'reference_a', 'reference_p', 'wheel1', 'wheel2'};
+                'femur_mid', 'knee', 'tibia_mid', 'heel', 'foot_mid', 'toe', 'reference_a', 'reference_p'};
     %ratMks  = {'spine_top','spine_bottom','hip_top', 'hip_middle', 'hip_bottom', ...
     %    'femur_mid', 'knee', 'tibia_mid', 'heel', 'foot_mid', 'toe', 'reference_a', 'reference_p'};
     [events,rat,treadmill] = ...
@@ -131,7 +133,7 @@ for fileind=1:length(filenum) %so I can do batches- all files for a given day
     y_zero = mean(rat.hip_bottom(:, 2), 'omitnan');
     
     
-    if ~recruit
+    if split_steps
         swing_times = find_swing_times2(rat.toe(:, :), 1, 70)
 %         cutoff = 9;
 %         interval = 10;

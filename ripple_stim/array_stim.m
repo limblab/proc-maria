@@ -82,6 +82,7 @@ command{1} = struct('CathDur', 1000, ...    % us
 ws.set_stim(command, 16);
 ws.set_Run(ws.run_once_go)
 pause(2); %wait for the Vicon to be activated
+%TODO: add vicon activation! will be easy
 
 
 %set constant parameters for stimulator
