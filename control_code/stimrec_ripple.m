@@ -83,10 +83,10 @@ len_stim = stim_pulses(1)/stim_freq *1000; %length of time to spend stimulating 
 %% Build the array for stimulation - one pulse
 
 %place the correct values in the array
-vals = currentamplitude*ones(1, stim_pulses(1));
+vals = stim_amps*ones(1, stim_pulses(1));
 
 %add pause time to array and reset to zero stimulation at the end
-stim_array = [zeros(1, 20) vals zeros(1, 20)];
+stim_array = [zeros(1, 10) vals zeros(1, 20)];
 
 active_channels = find(~is_active==0); %TODO: check the output here! I need a list of channels like [1 3 4 9]
 

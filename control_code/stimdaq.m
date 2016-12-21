@@ -20,6 +20,8 @@ function stimdaq
     delete(priorPorts); % and deletes them 
     
     %initialize Ripple wireless stimulator object
+    %ws_object = 1; %for testing without turning on stimulator
+    
     if ~exist('ws_object', 'var')
         disp('Creating wireless stimulator object...');
         %ws = wireless_stim(com_port, 1); %the number has to do with verbosity of running feedback
