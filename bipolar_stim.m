@@ -1,7 +1,7 @@
 %inputs
-channel_pairs = {[1 2] [3 4] [5 6]};
+channel_pairs = {[13 14]};
 freq = 40; %40 Hz frequency
-pw = 200; %200 us pulse width
+pw = .2; %200 us pulse width
 sending_freq = 30; %30 Hz update freq
 
 %build fake current array
@@ -10,7 +10,7 @@ amp = 3; %assume amplitude of 3 mA during stim
 
 %make array
 arr = [zeros(1, 5) amp*ones(1, dur*freq) zeros(1, 5)];
-current_arrays = {arr arr arr};
+current_arrays = {arr};
 
 %set up channel array for manipulating them all at once
 channels = cell2mat(channel_pairs);
@@ -18,7 +18,7 @@ com_port = 'COM5';
 
 %check that there are no repeated channels and there's an even number
 %just remove duplicates and then check that array matches the original
-if length(intersect(a, unique(a)))~=length(a) && mod(length(a), 2)~=0
+if length(intersect(channels, unique(channels)))~=length(channels) && mod(length(channels), 2)~=0
     disp('Error: Wrong number of channels.'); 
 end
 
