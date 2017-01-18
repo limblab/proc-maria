@@ -1,26 +1,25 @@
-clear all; close all;
+
 
 [folder, name, ext] = fileparts(mfilename('fullpath'));
 cd(folder);
 fig_folder = '../../../../figures/';
 %% Define files to load
 %161006, 4 - ready
-filedate = 'bfarun2_';
+filedate = '160908';
 %filename = '16-07-26';
-ratName = '16-11-01';
-%ratName = [filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)];
+%ratName = '16-08-11';
+ratName = [filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)];
 sample_freq = 100; %give this value in Hz
-pathName = ['../../../../data/kinematics/'  'bfarun_files/'];
-%pathName = ['../../../../data/kinematics/' filedate '_files/'];
-filenum = 11; %can input an array if desired
-make_graphs = [];
+pathName = ['../../../../data/kinematics/' filedate '_files/'];
+filenum = 9; %can input an array if desired
+make_graphs = [2];
 saving = false;
 animate = false;
 recruit = false;
-split_steps = false; 
+split_steps = true; 
 hist = false;
 hists = {};
-gapfill = false;
+gapfill = true;
 
 for fileind=1:length(filenum) %so I can do batches- all files for a given day
     %close all;
@@ -32,8 +31,8 @@ for fileind=1:length(filenum) %so I can do batches- all files for a given day
     %    ratMks = {'hip_center', 'hip_top', 'hip_bottom', 'knee', 'heel', 'toe'}
 %          ratMks  = {'spine_top','spine_bottom','hip_top','hip_bottom', ...
 %               'hip_middle', 'knee', 'heel', 'foot_mid', 'toe'};
-    %     ratMks  = {'spine_top','spine_bottom','hip_top','hip_bottom', ...
-    %          'hip_middle', 'knee', 'heel', 'foot_mid', 'toe', 'wheel1', 'wheel2'};
+ %        ratMks  = {'spine_top','spine_bottom','hip_top','hip_bottom', ...
+ %             'hip_middle', 'knee', 'heel', 'foot_mid', 'toe'};
            ratMks  = {'spine_top','spine_bottom','hip_top', 'hip_middle', 'hip_bottom', ...
                 'femur_mid', 'knee', 'tibia_mid', 'heel', 'foot_mid', 'toe', 'reference_a', 'reference_p'};
     %ratMks  = {'spine_top','spine_bottom','hip_top', 'hip_middle', 'hip_bottom', ...
@@ -43,11 +42,45 @@ for fileind=1:length(filenum) %so I can do batches- all files for a given day
     
     %convert to mm
     %cut section down, if desired
-    startMk = 1; %round(length(rat.knee)/2);
-    lastMk = round(length(rat.knee)*1); %length(rat.knee);
+    spl = 'n'; 
+    if length(rat.knee)>20000
+        spl = char(input('Split array as recruitment curve peaks? y/n ', 's')); 
+    end
+
+    if spl == 'y'
+        %convert to only the spikes plus short blocks around them
+        numsp = ceil(length(rat.knee)/20000); 
+        %now I know how many to split it into 
+        %so define this with ([ratMks 'num']) like rat.knee1, rat.knee2
+        %then split it into as many as there are
+        mks = length(ratMks)
+        for i=1:numsp
+            %define location to split array
+            stMk = ((i-1)*20000)+1; 
+            lstMk = min(i*20000, length(rat.knee)); 
+            
+            for j = 1:mks
+            %concatenate names of mks so I get "knee1" "knee2" etc
+                rat.([ratMks{j} num2str(i)]) = rat.(ratMks{j})(stMk:lstMk, :); 
+                ratMks{end+1} = [ratMks{j} num2str(i)]; 
+            end
+            %TODO: define the whole thing in terms of these arrays
+            %TODO: then delete the original one that's just "knee" not
+            %"knee2"
+            %TODO: then deal with later issues (particularly in graph # 2
+            %and the angle calculations)
+        end
+        ratMks(1:mks) = []; 
+        %so I need to split it into the correct number of blocks of 20000
+        %pts
+        %then use this "spl" tag later in code to know that I need to cycle
+        %a couple of times to get angles
+        %then pick the peaks and the short chunks around them and put that
+        %in a new array
+    end
+    
     for i=1:length(ratMks)
-        rat.(ratMks{i}) = rat.(ratMks{i})(startMk:lastMk, :);
-        rat.(ratMks{i}) = rat.(ratMks{i})/4.7243;
+        rat.(ratMks{i}) = rat.(ratMks{i})/4.7243; %calibrate
     end
     
     
@@ -122,11 +155,22 @@ for fileind=1:length(filenum) %so I can do batches- all files for a given day
         end
     end
     
-    
-    rat.angles.limb = computeAngle(rat.hip_top, rat.hip_middle, rat.foot_mid);
-    rat.angles.hip  = computeAngle(rat.hip_top, rat.hip_middle, rat.knee);
-    rat.angles.knee = computeAngle(rat.hip_middle, rat.knee, rat.heel);
-    rat.angles.ankle = computeAngle(rat.knee, rat.heel, rat.foot_mid);
+    if spl=='n' % if the array is a normal size
+        rat.angles.limb = computeAngle(rat.hip_top, rat.hip_middle, rat.foot_mid);
+        rat.angles.hip  = computeAngle(rat.hip_top, rat.hip_middle, rat.knee);
+        rat.angles.knee = computeAngle(rat.hip_middle, rat.knee, rat.heel);
+        rat.angles.ankle = computeAngle(rat.knee, rat.heel, rat.foot_mid);
+
+    else %if it's a very long data set
+        %TODO! THIS IS AS FAR AS I'VE SORTED THIS OUT, FIGURE OUT HOW TO
+        %REMOVE MIDDLE CHUNKS WHERE NOTHING HAPPENS
+        for i=1:numsp
+            rat.subangles.(['limb' num2str(i)]) = computeAngle(rat.(['hip_top' num2str(i)]), rat.(['hip_middle' num2str(i)]), rat.(['foot_mid' num2str(i)])); 
+            rat.subangles.(['hip' num2str(i)]) = computeAngle(rat.(['hip_top' num2str(i)]), rat.(['hip_middle' num2str(i)]), rat.(['knee' num2str(i)])); 
+            rat.subangles.(['knee' num2str(i)]) = computeAngle(rat.(['hip_middle' num2str(i)]), rat.(['knee' num2str(i)]), rat.(['heel' num2str(i)])); 
+            rat.subangles.(['ankle' num2str(i)]) = computeAngle(rat.(['knee' num2str(i)]), rat.(['heel' num2str(i)]), rat.(['foot_mid' num2str(i)])); 
+        end
+    end
     
     track_marker = rat.toe; %which marker to plot (should generalize so I can plot multiple markers?)
     x_zero = mean(rat.hip_bottom(:, 1), 'omitnan');
@@ -134,13 +178,40 @@ for fileind=1:length(filenum) %so I can do batches- all files for a given day
     
     
     if split_steps
-        swing_times = find_swing_times2(rat.toe(:, :), 1, 70)
+        swing_times = find_swing_times2(rat.foot_mid(:, :), 1, 200)
 %         cutoff = 9;
 %         interval = 10;
 %         swing_times = find_swing_times(cutoff, interval, rat.angles.ankle);
     else
         swing_times = {};
     end
+    
+    %% in the case of a very long set of data, split into areas around the peaks
+    if spl=='y'
+        %need to know numsp (number of split sections)
+        %for total number of splits, find the peaks
+        %NOTE this may require manually determining the correct set of
+        %angles to be paying attention to. 
+        %split_locs = []; 
+        rat.angles.limb = []; 
+        rat.angles.hip = []; 
+        rat.angles.knee = []; 
+        rat.angles.ankle = []; 
+        for i=1:numsp
+            datainv = 1.01*max(rat.subangles.(['knee' num2str(i)]))-rat.subangles.(['knee' num2str(i)]);
+            [pks, locs] = findpeaks(datainv, 'MinPeakDistance', 100, 'MinPeakHeight', 5)
+            %split_locs = [split_locs; locs+(i-1)*20000+1]
+            for j=1:length(locs)
+                rat.angles.ankle = [rat.angles.ankle; rat.subangles.(['ankle' num2str(i)])(locs(j)-100:locs(j)+100)]
+                rat.angles.limb = [rat.angles.limb; rat.subangles.(['limb' num2str(i)])(locs(j)-100:locs(j)+100)]
+                rat.angles.hip = [rat.angles.hip; rat.subangles.(['hip' num2str(i)])(locs(j)-100:locs(j)+100)]
+                rat.angles.knee = [rat.angles.knee; rat.subangles.(['knee' num2str(i)])(locs(j)-100:locs(j)+100)]
+            end
+        end    
+        
+    end
+    
+    
     
     %% 1. XY positions vs time
     

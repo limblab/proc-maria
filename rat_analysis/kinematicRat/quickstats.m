@@ -83,7 +83,7 @@ end
 
 %save calculated statistics
 data_path = ['/Users/mariajantz/Documents/Work/data/kinematics/processed/'];
-filename = '161006_stats.mat';
+filename = 'collate_stats.mat';
 if exist([data_path filename], 'file')
     load([data_path filename]);
     tn = [filedate '_' num2str(filenum(fileind), '%02d')];

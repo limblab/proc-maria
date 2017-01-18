@@ -7,12 +7,12 @@ swing_times = {};
 
 inverted = 1.01*max(endpoint_marker(:, 1)) - endpoint_marker(:, 1);
 if lowpeak_mm==0
-    hpk = endpoint_marker(1, 1)/2; 
-    lpk = inverted(1, 1)/2; 
+    hpk = endpoint_marker(5, 1)/2; 
+    lpk = inverted(5, 1)/2; 
   
 else
-    hpk = endpoint_marker(1, 1)+lowpeak_mm; 
-    lpk = inverted(1, 1)+lowpeak_mm; 
+    hpk = endpoint_marker(5, 1)+lowpeak_mm; 
+    lpk = inverted(5, 1)+lowpeak_mm; 
 end
 
     [high_peaks, high_locs] = findpeaks(endpoint_marker(:, 1), 'MinPeakDistance', peakdist_ms, 'MinPeakHeight', hpk);
@@ -25,15 +25,29 @@ end
     findpeaks(inverted, 'MinPeakDistance', peakdist_ms, 'MinPeakHeight', lpk)
     figure(2); %stance peaks/high_peaks
     findpeaks(endpoint_marker(:, 1), 'MinPeakDistance', peakdist_ms, 'MinPeakHeight', hpk)
-    rm = char(input('Remove values from fig1 array? y/n', 's'));
+    rm = char(input('Remove values from fig1 array? y/n ', 's'));
     if rm=='y'
         idx = input('Which indices to remove?');
         low_locs(idx) = [];
     end
-    rm = char(input('Remove values from fig2 array? y/n', 's'));
+    ad = char(input('Add values to fig1 array? y/n ', 's')); 
+    if ad=='y'
+        idx = input('Insert value after which point?'); 
+        val = input('Which value to insert?'); 
+        %add the value
+        low_locs = [low_locs(1:idx); val; low_locs(idx+1:end)]; 
+    end
+    rm = char(input('Remove values from fig2 array? y/n ', 's'));
     if rm=='y'
         idx = input('Which indices to remove?');
         high_locs(idx) = [];
+    end
+    ad = char(input('Add values to fig1 array? y/n ', 's')); 
+    if ad=='y'
+        idx = input('Insert value after which point?'); 
+        val = input('Which value to insert?'); 
+        %add the value
+        high_locs = [high_locs(1:idx); val; high_locs(idx+1:end)]; 
     end
 %end
 
