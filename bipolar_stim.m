@@ -1,5 +1,5 @@
 %inputs
-channel_pairs = {[13 14]};
+channel_pairs = {[3 4] [5 6] [7 8] [9 10]}; %1-12, not 3/4
 freq = 40; %40 Hz frequency
 pw = .2; %200 us pulse width
 sending_freq = 30; %30 Hz update freq
@@ -8,8 +8,18 @@ sending_freq = 30; %30 Hz update freq
 dur = .5; %duration of .5 seconds
 amp = 3; %assume amplitude of 3 mA during stim
 
-%make array
-arr = [zeros(1, 5) amp*ones(1, dur*freq) zeros(1, 5)];
+% %make array
+% dur = .3; 
+% transdur = .2; 
+% flex_arr = [amp*ones(1, dur*freq) zeros(1, dur*freq) zeros(1, transdur*freq)];
+% ext_arr = [zeros(1, dur*freq) amp*ones(1, dur*freq) zeros(1, transdur*freq)]; 
+% trans_arr = [zeros(1, dur*freq*2) amp*ones(1, dur*freq)];
+% current_arrays = {flex_arr ext_arr ext_arr trans_arr};
+
+%quick array option for testing single muscles
+amp = 2;
+channel_pairs = {[1 2]};
+arr = [amp*ones(1, dur*freq) zeros(1, 1)];
 current_arrays = {arr};
 
 %set up channel array for manipulating them all at once
@@ -57,7 +67,8 @@ for i=1:length(channels)
     %set train delay to create staggered pulses
     ws.set_TD(50+500*ceil(i/2), channels(i));
     %set the constant stimulation parameters
-    ws.set_stim(command, channels); 
+    ws.set_stim(command, channels(i)); 
+    pause(.1); 
 end
 
 %set stimulator to run continuously
@@ -75,7 +86,8 @@ ao = analogoutput('nidaq','Dev1');
 addchannel(ao,[0 1]);
 set(ao,'TriggerType','Manual');
 % data to demo "on" signal in Plexon
-ondata = [zeros(1,1) 5*ones(1,50) zeros(1,1); zeros(1,52)]'; 
+ondata = [zeros(1,1) -5*ones(1,20) zeros(1,1); zeros(1,22)]';
+offdata = [zeros(1,1) 5*ones(1,20) zeros(1,1); zeros(1,22)]';
 
 putdata(ao,ondata);  % set up data to send to Plexon
 start([ao]); pause(0.001);
@@ -85,12 +97,14 @@ pause(2); %can change this pause value
 
 %TODO: update all of these variables and check it
 %do stimulation for each muscle, for each point in the array
+steps = 1; 
+for s = 1:steps
 for i=1:length(current_arrays{1})%for every data point
     a = tic;
     for j = 1:size(current_arrays, 2) %for every muscle
         command{1} = struct('CathAmp', current_arrays{j}(i)*1000+32768,... %in uA
             'AnodAmp', 32768-current_arrays{j}(i)*1000);
-        ws.set_stim(command, channels(j)); %send updated amplitude to stimulator
+        ws.set_stim(command, channel_pairs{j}); %send updated amplitude to stimulator
     end
     %wait until it's time to do the next data point
     %TODO: test this. it's pretty janky.
@@ -99,15 +113,15 @@ for i=1:length(current_arrays{1})%for every data point
     end
     %timearray(i) = toc(a);
 end
-
+end
 %stop all stimulation before ending program
 ws.set_Run(ws.run_stop, channels);
 
-putdata(ao,ondata);  % set up data to send to Plexon
+putdata(ao,offdata);  % set up data to send to Plexon
 start([ao]); pause(0.001);
 trigger([ao]); %fopen(s);
-disp('starting signal to Plexon')
-pause(5); 
+disp('stop signal to Plexon')
+pause(2); 
 
 pause(2); 
 stop(ao); 
