@@ -17,8 +17,8 @@ amp = 3; %assume amplitude of 3 mA during stim
 % current_arrays = {flex_arr ext_arr ext_arr trans_arr};
 
 %quick array option for testing single muscles
-amp = 2;
-channel_pairs = {[1 2]};
+amp = 4;
+channel_pairs = {[2 4]};
 arr = [amp*ones(1, dur*freq) zeros(1, 1)];
 current_arrays = {arr};
 
@@ -123,7 +123,6 @@ trigger([ao]); %fopen(s);
 disp('stop signal to Plexon')
 pause(2); 
 
-pause(2); 
 stop(ao); 
 
 
