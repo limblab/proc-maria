@@ -24,8 +24,8 @@ function stimdaq
     
     if ~exist('ws_object', 'var')
         disp('Creating wireless stimulator object...');
-        %ws = wireless_stim(com_port, 1); %the number has to do with verbosity of running feedback
-        %ws.init(1, ws.comm_timeout_disable);
+        ws = wireless_stim(com_port, 1); %the number has to do with verbosity of running feedback
+        ws.init(1, ws.comm_timeout_disable);
         
         ws_struct = struct(...
             'serial_string', 'COM5',...
