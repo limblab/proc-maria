@@ -34,9 +34,9 @@ function stimdaq
             'blocking', false, ...
             'zb_ch_page', 5 ...
             );
-        
-        ws_object = wireless_stim(ws_struct);
-        ws_object.init();
+%         
+%         ws_object = wireless_stim(ws_struct);
+%         ws_object.init();
     end
 %     % Define serial port through proper COM port
 %     s = serial('COM4','BaudRate',115200);
