@@ -97,8 +97,12 @@ save([filepath dayname '/' datestr(now, 'yyyymmdd') '_' num2str(i,'%03d') '.mat'
 
 
 %% Call stimulation based on array
+
 pause_between = 0; 
-array_stim_force(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, pause_between, 'COM5');
+force_data = array_stim_force(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, pause_between, 'COM5');
+
+%save force data
+save([filepath dayname '/' datestr(now, 'yyyymmdd') '_' num2str(i,'%03d') '_force.mat'], 'force_data'); 
 
 %TODO: array-based stim fxn with freq modulation
 

@@ -1,4 +1,5 @@
 classdef ForceCollect < handle
+    %Maria Jantz, 2017
     properties
         calMat %calibration matrix; not sure where it's used but defs necessary
         ai %the analog input object used to collect data
@@ -13,7 +14,7 @@ classdef ForceCollect < handle
         function ret = init(obj)
             %TODO load and save the calibration matrix
             %Load Calibration Matrix for Force Transducer (see stimdaq)
-            parentFolder = strcat(fileparts(mfilename('fullpath')), '\..\limblab_analysis\control_code\calibration matrices\');
+            parentFolder = strcat(fileparts(mfilename('fullpath')), '\control_code\calibration matrices\');
             calMat = load(strcat(parentFolder, 'newCal'));
             calMat = calMat';
             % Make new folder to store calibration matrix (labeled with current date)
@@ -70,11 +71,40 @@ classdef ForceCollect < handle
             stop(obj.ai);
         end
         
-        function ret = set_samples(obj, samp_rate)
+        
+        function ret = start(obj)
+            disp('Starting force collection');
+            obj.timer = tic;
+            %TODO: acquire the signal from the vicon (dv_normal and
+            %duration)
+            
+            %TODO: deal with the ao signal - that either triggers vicon or
+            %the sync signal, not sure which
+%             start([obj.ai ao]); pause(0.001);
+%             trigger([obj.ai ao]); %fopen(s);
+            start([obj.ai]); pause(0.001);
+            trigger([obj.ai]); %fopen(s);
+        end
+        
+        function data = stop(obj)
+            %not sure if I should put part of this in the "stop" method??
+            %possible plan: split here into start and stop methods; do not
+            %have a wait object so I can go do other things while this data
+            %is acquired in the background (control wait time from outside
+            %of this) - BUT for early testing use this as one method
+            
+%             wait(obj.ai,(obj.sample_duration*1.25)/1e3);
+            data(:,:) = getdata(obj.ai);
+
+            disp('Stopping force collection');
+            toc(obj.timer);
+            stop(obj.ai);
+        end
+        
+        function ret = set_samples(obj, samp_duration)
             disp('Setting sample rate and samples per trigger'); 
-            obj.sample_rate = samp_rate; 
-            obj.samples_per_trigger = floor(sample_duration/1000*obj.sample_rate);
-            set(obj.ai,'SampleRate', obj.sample_rate);
+            obj.sample_duration = samp_duration; 
+            obj.samples_per_trigger = floor(obj.sample_duration/1000*obj.sample_rate);
             set(obj.ai,'SamplesPerTrigger', obj.samples_per_trigger);
         end
     end

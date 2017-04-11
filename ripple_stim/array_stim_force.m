@@ -1,4 +1,4 @@
-function array_stim(current_array, sending_freq, stim_freq, sampled_freq, stretch_factor, pw, channels, repeats, muscle_names, pause_time, com_port)
+function force_data = array_stim_force(current_array, sending_freq, stim_freq, sampled_freq, stretch_factor, pw, channels, repeats, muscle_names, pause_time, com_port)
 %current_array should be in the form of a matrix of arrays that each have
 %averaged, filtered EMG data to be sent to the corresponding channel
 %pw: in ms, freqs: in hz, currents in current_array: in mA (mA and ms will
@@ -43,7 +43,9 @@ end
 % %set(aleg,'FontSize',18);
 
 length_stim = size(ds_array{1}, 2)/sending_freq; %gets the number of seconds being spent stimulating
-disp(['The total time spent stimulating is ' num2str(length_stim)]);
+totaltime = length_stim*repeats+pause_time*(repeats-1); 
+disp(['Stimulating ' num2str(length_stim) ' s per step and ' num2str(totaltime) ' s total']);
+
 
 %if the stimulator object doesn't exist yet, set it up:
 if ~exist('ws', 'var')
@@ -65,6 +67,9 @@ end
 %set up object to control force collection
 f = ForceCollect; 
 f.init(); 
+%set duration of force collection to total time of stimulation plus 4 seconds
+f.set_samples((totaltime + 4) * f.sample_rate)
+
 
 %set train delay so I have staggered pulses
 for i=1:length(channels)
@@ -85,8 +90,6 @@ command{1} = struct('CathDur', 1000, ...    % us
     );
 ws.set_stim(command, 16);
 ws.set_Run(ws.run_once_go)
-pause(2); %wait for the Vicon to be activated
-%TODO: add vicon activation! will be easy
 
 
 %set constant parameters for stimulator
@@ -107,26 +110,39 @@ ws.set_Run(ws.run_cont, channels);
 %stimulate at appropriate channels in loop
 %now that this is converted to an array of only the values I'll be sending,
 %I need to actually stimulate! using a while loop with tic and toc ugh.
+f.start()
+pause(0.5);
 
+b = tic; 
 for steps=1:repeats %take as many steps as is specified
+    disp('step'); 
+    toc(b)
     %add pause if desired
     if pause_time>0
         ws.set_Run(ws.run_stop, channels);
         pause(pause_time);
         ws.set_Run(ws.run_cont, channels);
     end
+    toc(b)
     for i=1:length(ds_array{1})%for every data point
-        a = tic;
+        disp(['data pt ' num2str(i)]); 
+        val = tic; 
         for j = 1:size(ds_array, 2) %for every muscle
+            disp('muscle')
+            a = tic; 
             command{1} = struct('CathAmp', ds_array{j}(i)*1000+32768,... %in uA
                 'AnodAmp', 32768-ds_array{j}(i)*1000);
+            toc(a)
             ws.set_stim(command, channels(j)); %send updated amplitude to stimulator
+            toc(a)
         end
         %wait until it's time to do the next data point
-        
+        toc(b)
+        %toc(a)
         %TODO: test this. it's pretty janky.
-        while toc(a)<(1/sending_freq)
-            toc(a);
+        while toc(val)<(1/sending_freq)
+            disp('looping')
+            toc(val)
         end
         %timearray(i) = toc(a);
     end
@@ -135,5 +151,7 @@ end
 %stop all stimulation before ending program
 ws.set_Run(ws.run_stop, channels);
 
-%TODO: pause long enough for stim to end??
+pause(4);
+force_data = f.stop(); 
+
 end

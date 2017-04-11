@@ -24,8 +24,8 @@ function stimdaq
     
     if ~exist('ws_object', 'var')
         disp('Creating wireless stimulator object...');
-        ws = wireless_stim(com_port, 1); %the number has to do with verbosity of running feedback
-        ws.init(1, ws.comm_timeout_disable);
+ %       ws = wireless_stim(com_port, 1); %the number has to do with verbosity of running feedback
+ %       ws.init(1, ws.comm_timeout_disable);
         
         ws_struct = struct(...
             'serial_string', 'COM5',...
@@ -35,8 +35,8 @@ function stimdaq
             'zb_ch_page', 5 ...
             );
 %         
-%         ws_object = wireless_stim(ws_struct);
-%         ws_object.init();
+         ws_object = wireless_stim(ws_struct);
+         ws_object.init();
     end
 %     % Define serial port through proper COM port
 %     s = serial('COM4','BaudRate',115200);
