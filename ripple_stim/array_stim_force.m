@@ -113,37 +113,57 @@ ws.set_Run(ws.run_cont, channels);
 f.start()
 pause(0.5);
 
-b = tic; 
+%make arrays to send
+
+ds_mat = cell2mat(ds_array');
+
+full_cmd = zeros(16, size(ds_mat, 2)); 
+full_cmd(channels, :) = ds_mat;
+
+cmd_cath = full_cmd*1000+32768; 
+cmd_an = 32768-full_cmd*1000; 
+%imagesc(cmd_cath) to see stim channels quickly
+
 for steps=1:repeats %take as many steps as is specified
     disp('step'); 
-    toc(b)
+
     %add pause if desired
     if pause_time>0
         ws.set_Run(ws.run_stop, channels);
         pause(pause_time);
         ws.set_Run(ws.run_cont, channels);
     end
-    toc(b)
+
     for i=1:length(ds_array{1})%for every data point
         disp(['data pt ' num2str(i)]); 
         val = tic; 
-        for j = 1:size(ds_array, 2) %for every muscle
-            disp('muscle')
-            a = tic; 
-            command{1} = struct('CathAmp', ds_array{j}(i)*1000+32768,... %in uA
-                'AnodAmp', 32768-ds_array{j}(i)*1000);
-            toc(a)
-            ws.set_stim(command, channels(j)); %send updated amplitude to stimulator
-            toc(a)
-        end
+%         for j = 1:size(ds_array, 2) %for every muscle
+%             disp('muscle')
+%             a = tic; 
+%             command{1} = struct('CathAmp', ds_array{j}(i)*1000+32768,... %in uA
+%                 'AnodAmp', 32768-ds_array{j}(i)*1000);
+%             toc(a)
+%             ws.set_stim(command, channels(j)); %send updated amplitude to stimulator
+%             toc(a)
+%         end
+
+        a = tic;
+        command{1} = struct('CathAmp', cmd_cath(:, i),... %in uA
+            'AnodAmp', cmd_an(:, i));
+        ws.set_stim(command, 1:16); %send updated amplitude to stimulator
+        toc(a)
+        
         %wait until it's time to do the next data point
-        toc(b)
         %toc(a)
         %TODO: test this. it's pretty janky.
-        while toc(val)<(1/sending_freq)
-            disp('looping')
-            toc(val)
+        if toc(val)>(1/sending_freq)
+            disp('too slow'); 
         end
+        
+        while toc(val)<(1/sending_freq)
+            
+        end
+        toc(val)
         %timearray(i) = toc(a);
     end
 end
