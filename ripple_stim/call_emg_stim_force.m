@@ -13,10 +13,10 @@
 %load emg_array (aka emg array)
 %make sure you're running this code in stim_arrays location
 cd 'C:\Users\mkj605\Documents\GitHub\stim_arrays';
-load('vl_200_halfstance.mat'); 
-legendinfo = {legendinfo{1:3} legendinfo{5:end}};
-emg_array = {emg_array{1:3} emg_array{5:end}};
-muscles = [1:5 10 7:9]; %1:length(emg_array); %can also pick and choose muscles to implement
+load('half_vl_300_halfstance.mat'); 
+legendinfo = {legendinfo{1:3} legendinfo{6:end}};
+emg_array = {emg_array{1:3} emg_array{6:end}};
+muscles = 1:length(emg_array); %can also pick and choose muscles to implement
 
 
 %define non-given parameters:
@@ -28,8 +28,8 @@ pw = .2; %ms
 %define in the same order as 'muscles' array
 emglow_limit = .16*ones(1, length(channels)); %[.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise and co-contraction issues
 emghigh_limit = 1*ones(1, length(channels)); %get rid of excessively high spikes
-amplow_limit = [.6 .8 1.2 2 .5 .8 1 .7 .4]; %lowest level of stim to twitch (err on low side)
-amphigh_limit = [1.7 3.5 3 4.5 2.5 2.5 2.5 2.5 2.3];  %highest level of stim to use
+amplow_limit = [.6 2.3 1.6 .4 .3 1.7 1 1.6 .6]; %lowest level of stim to twitch (err on low side)
+amphigh_limit = [2.5 4.5 4 1.5 2.2 4.5 4 4 2.5];  %highest level of stim to use
 
 %check that limits are all defined
 
@@ -71,7 +71,7 @@ else
 end
 
 hold off; 
-figure(3); hold on;
+figure(2); hold on;
 for i=1:length(current_arr)
     plot(current_arr{i}, 'linewidth', 2);
 end
