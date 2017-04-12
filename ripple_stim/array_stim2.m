@@ -1,4 +1,4 @@
-function array_stim(current_array, sending_freq, stim_freq, sampled_freq, stretch_factor, pw, channels, repeats, muscle_names, pause_time, ws)
+function array_stim2(current_array, sending_freq, stim_freq, sampled_freq, stretch_factor, pw, channels, repeats, muscle_names, pause_time, ws)
 %current_array should be in the form of a matrix of arrays that each have
 %averaged, filtered EMG data to be sent to the corresponding channel
 %pw: in ms, freqs: in hz, currents in current_array: in mA (mA and ms will
