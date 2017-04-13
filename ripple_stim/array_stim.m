@@ -100,29 +100,40 @@ end
 
 ws.set_Run(ws.run_cont, channels);
 
-%stimulate at appropriate channels in loop
-%now that this is converted to an array of only the values I'll be sending,
-%I need to actually stimulate! using a while loop with tic and toc ugh.
+%make arrays to send
+ds_mat = cell2mat(ds_array');
+
+full_cmd = zeros(16, size(ds_mat, 2)); 
+full_cmd(channels, :) = ds_mat;
+
+cmd_cath = full_cmd*1000+32768; 
+cmd_an = 32768-full_cmd*1000; 
+%imagesc(cmd_cath) to see stim channels quickly
 
 for steps=1:repeats %take as many steps as is specified
+    disp('step'); 
+
     %add pause if desired
     if pause_time>0
         ws.set_Run(ws.run_stop, channels);
         pause(pause_time);
         ws.set_Run(ws.run_cont, channels);
     end
+
     for i=1:length(ds_array{1})%for every data point
-        a = tic;
-        for j = 1:size(ds_array, 2) %for every muscle
-            command{1} = struct('CathAmp', ds_array{j}(i)*1000+32768,... %in uA
-                'AnodAmp', 32768-ds_array{j}(i)*1000);
-            ws.set_stim(command, channels(j)); %send updated amplitude to stimulator
-        end
-        %wait until it's time to do the next data point
+        disp(['data pt ' num2str(i)]); 
+        val = tic; 
+
+        command{1} = struct('CathAmp', cmd_cath(:, i),... %in uA
+            'AnodAmp', cmd_an(:, i));
+        ws.set_stim(command, 1:16); %send updated amplitude to stimulator
         
-        %TODO: test this. it's pretty janky.
-        while toc(a)<(1/sending_freq)
-            toc(a);
+        if toc(val)>(1/sending_freq)
+            disp('too slow'); 
+        end
+        
+        while toc(val)<(1/sending_freq)
+            %do nothing
         end
         %timearray(i) = toc(a);
     end

@@ -113,8 +113,9 @@ trigger([ao]); %fopen(s);
 disp('starting VICON')
 
 pause_between = 0; 
+a = tic; 
 array_stim(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, pause_between, 'COM5');
-
+toc(a); 
 
 putdata(ao,stopdata);  % stop the Vicon data acquisition
 start(ao);
