@@ -1,7 +1,7 @@
 function [allmag, allang, allang2] = forcefilt(data, calmat, b, a)
 
 for i=1:length(data)
-    temp_data = data{i}(:,end-5:end)*calmat;
+    temp_data = data{i}(:,end-5:end)*calmat; %acquire forces and moments from array
     nsamp = size(temp_data,1);
     base = repmat(mean(temp_data(1:400,:)),nsamp,1); %makes a repeating matrix of the average beginning data
     

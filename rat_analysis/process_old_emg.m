@@ -1,4 +1,4 @@
-%load('EMGdata.mat'); %uncomment for the first time running this code in a session
+load('/Users/mariajantz/Documents/Work/data/EMGdata.mat'); %uncomment for the first time running this code in a session
 data = rawCycleData; 
 gmax = data{1}(:,1); 
 %data{step number}(rows, muscle)

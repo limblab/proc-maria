@@ -2,10 +2,12 @@
 
 %get all the file name information
 %generalize this
-filedate = '170126';
-ratName = '160126'; 
-startnum = 68; %I need a better way of organizing these files...
-force_name = 'BF_force';
+clear all; close all; 
+filedate = '170418';
+ratName = '170418'; 
+startnum = 86; %I need a better way of organizing these files...
+muscle = 'BFp'; 
+force_name = [muscle '_force'];
 foldername = '/Users/mariajantz/Documents/Work/data/';
 kin_data = [foldername 'kinematics/' filedate '_files/' ratName];
 force_data = [foldername 'forces/' filedate '_iso/' force_name];
@@ -39,14 +41,14 @@ plot(allmag.');
 % plot(allang2.');
 figure(105); 
 plot(allmag(10, :)); 
-mnmag = []; 
+force_mnmag = []; 
 
 %average over .1s
 for i=1:size(allmag, 1)
-    mnmag(i) = mean(allmag(i, 2400:2600)); 
+    force_mnmag(i) = mean(allmag(i, 2400:2600)); 
 end
 figure(106); 
-plot(stim_vals, mnmag, '-d', 'LineWidth', 3, 'MarkerSize', 5); 
+plot(stim_vals, force_mnmag, '-d', 'LineWidth', 3, 'MarkerSize', 5); 
 
 %graph preferences
 box off; 
@@ -92,13 +94,15 @@ pkvels = 1:length(stim_vals);
 traceacc = {}; 
 
 for i=1:length(stim_vals)
-    %read in the file
-    path = ['/Users/mariajantz/Documents/Work/data/kinematics/' filedate '_files/' ratName num2str(i+startnum-1, '%02d') '.csv'];
-    [events,rat,treadmill] = importViconData(path,[filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)],tdmName,ratMks,tdmMks);
-    
-    for j=1:length(ratMks)
-        rat.(ratMks{j}) = rat.(ratMks{j})/4.7243; %calibrate
-    end
+    %read in the Vicon file
+%     path = ['/Users/mariajantz/Documents/Work/data/kinematics/' filedate '_files/' ratName num2str(i+startnum-1, '%02d') '.csv'];
+%     [events,rat,treadmill] = importViconData(path,[filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)],tdmName,ratMks,tdmMks);
+%     
+%     for j=1:length(ratMks)
+%         rat.(ratMks{j}) = rat.(ratMks{j})/4.7243; %calibrate
+%     end
+    path = '/Users/mariajantz/Documents/Work/data/kinematics/processed/'; 
+    load([path filedate '_' num2str(i+startnum-1, '%02d') '_rat.mat']); 
     
     %that returns a struct named "rat"
     %import every marker on the rat (oh boy)
@@ -110,17 +114,6 @@ for i=1:length(stim_vals)
     
     [traceacc{i}, mnacc(i), pkvels(i)] = accfilt(data, cutoff); 
     
-%     kintime = (1:(length(tracex)))/200*1000;
-%     subplot(3,1,1)
-%     nsamp = length(data.x);
-%     plot(kintime(1:nsamp-1),data2.x(1:nsamp-1,11)')
-%     subplot(3,1,2)
-%     
-%     plot(kintime(1:nsamp-1),data2.dx(1:nsamp-1,11)')
-%     subplot(3,1,3)
-%     plot(kintime(1:nsamp-2),data.ddx(1:nsamp-2,11)')
-    
-    
 end
 
 t = cell2mat(cellfun(@(x) mean(x), traceacc, 'UniformOutput', 0));
@@ -129,6 +122,7 @@ t2 = cell2mat(cellfun(@(x) mean(x(2:end)), traceacc, 'UniformOutput', 0));
 figure; hold on; 
 plot(mnacc); 
 plot(t); 
+plot(t2); 
 
 figure; 
 plot(stim_vals, t2,  '-d', 'LineWidth', 3, 'MarkerSize', 5); 
@@ -139,6 +133,16 @@ ylabel('Mean acceleration (mm/s^2)');
 set(gca, 'FontSize', 24); 
 set(gca, 'XTick', stim_vals); 
 set(gca, 'TickDir', 'out'); 
+
+%% Somehow or other I should probably look at direction of force/acceleration
+
+
+%% Save the stimulation values and the corresponding force/acceleration
+
+path = '/Users/mariajantz/Documents/Work/data/kinematics/rc_data/'; 
+save([path muscle '_' filedate], 'stim_vals', 't', 'mnacc', 't2', 'force_mnmag'); 
+
+
 
 %need two modular versions: one with detection of the point that the
 %stimulation starts and one where you have new files for each one.
