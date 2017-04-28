@@ -5,8 +5,8 @@
 clear all; close all; 
 filedate = '170418';
 ratName = '170418'; 
-startnum = 86; %I need a better way of organizing these files...
-muscle = 'BFp'; 
+startnum = 1; %I need a better way of organizing these files...
+muscle = 'IP'; 
 force_name = [muscle '_force'];
 foldername = '/Users/mariajantz/Documents/Work/data/';
 kin_data = [foldername 'kinematics/' filedate '_files/' ratName];
@@ -35,6 +35,7 @@ cutoff = 500;
 
 figure(100);
 plot(allmag.');
+allang
 % figure(101);
 % plot(allang.');
 % figure(102);
@@ -60,13 +61,20 @@ set(gca, 'TickDir', 'out');
 
 pause(1);
 
-
-
-
+%plot the angles
+figure(107); hold on; 
+b = mean(allang(:, 2350:2750)');
+c = mean(allang2(:, 2350:2750)');
+plot(c, 'linewidth', 2)
+plot(b, 'linewidth', 2)
+title('Angle of force'); 
+xlabel('Trial number'); 
+ylabel('angle'); 
+set(gca, 'FontSize', 20);
+hold off; 
 
 %FINALLY, find the best section of the code to use as the point for
 %comparison to acceleration
-
 
 
 %...not actually sure what I need to plot here but I can play with this a

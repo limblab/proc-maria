@@ -4,6 +4,16 @@
 % filenum = 1;
 
 %rat.toe = rat.phalanx
+path = '/Users/mariajantz/Documents/Work/data/kinematics/processed/'; 
+filedate = '170406'; 
+filenum = [112:138]; 
+fileind = 1; 
+
+for fileind=1:length(filenum)
+load([path filedate '_' num2str(filenum(fileind)) '_rat']); 
+
+%calculate swing times
+swing_times = find_swing_times2(rat.foot_mid(:, :), 1, 150)
 
 xvals = rat.toe(:, 1)-rat.hip_bottom(:, 1);
 yvals = rat.toe(:, 2)-rat.hip_bottom(:, 2);
@@ -83,7 +93,7 @@ end
 
 %save calculated statistics
 data_path = ['/Users/mariajantz/Documents/Work/data/kinematics/processed/'];
-filename = 'collate_stats.mat';
+filename = '170406_stats.mat';
 if exist([data_path filename], 'file')
     load([data_path filename]);
     tn = [filedate '_' num2str(filenum(fileind), '%02d')];
@@ -139,10 +149,10 @@ end
 save([data_path filename], 'trialname', 'endpoint_xvals', 'endpoint_xval_stepranges', 'endpoint_yvals', 'endpoint_yval_stepranges', ...
     'hip_angle_ranges', 'knee_angle_ranges', 'ankle_angle_ranges', 'swing_time_idx');
 
-
+end
 %save the location of the rat markers in its own file for further processing if
 %desired.
-save([data_path filedate '_' num2str(filenum(fileind), '%02d') '_rat.mat'], 'rat');
+%save([data_path filedate '_' num2str(filenum(fileind), '%02d') '_rat.mat'], 'rat');
 
 
 

@@ -1,4 +1,4 @@
-function ret = traj_avg(rat, swing_times, fig_num, elim_steps)
+function [xvals, yvals] = traj_avg(rat, swing_times, fig_num, elim_steps)
 %Pass in a "rat" struct that includes a field angles, which is itself a
 %struct that usually includes limb, hip, knee, and ankle angles. Also pass
 %in a cell array of "swing_times" which includes 2-value arrays noting the
@@ -9,8 +9,6 @@ function ret = traj_avg(rat, swing_times, fig_num, elim_steps)
 
 %split the array according to beginning of every swing phase
 
-figure(fig_num); 
-grid off;
 
 track_marker = rat.toe; 
 
@@ -37,6 +35,9 @@ xvals = mean(dsx, 'omitnan')-x_zero;
 yvals = mean(dsy, 'omitnan')-y_zero;
 
 %first_y = yvals(1);
+if fig_num~=0
+figure(fig_num); 
+grid off;
 hold on;
 
 plot(xvals, yvals, 'linewidth', 4); %average together each step
@@ -50,5 +51,6 @@ ylabel('Y (mm)');
 xlabel('X (mm)');
 set(ax, 'fontsize', 24);
 set(gca,'TickDir','out')
+end
 
 end
