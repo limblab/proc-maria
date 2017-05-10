@@ -4,7 +4,7 @@ function rat = import_vicon_rat(filedate, ratName, filenum)
 
 pathName = ['/Users/mariajantz/Documents/Work/data/kinematics/' filedate '_files/'];
 
-filedate = '17-04-06'; 
+%filedate = '17-04-06'; 
 if filenum >= 100 %renumbering for the way Vicon rolls over at 3 digits
     filedate = [filedate(1:end-1) num2str(str2num(filedate(end))+1)]; 
     filenum = filenum-100; 
