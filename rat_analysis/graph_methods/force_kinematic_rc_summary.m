@@ -11,7 +11,7 @@ muscle = 'IP';
 
 %set paths
 path = '/Users/mariajantz/Documents/Work/data/';
-kin_path = [path 'kinematics/' filedate '_files/' filedate]; 
+kin_path = [path 'kinematics/' filedate '_files/processed/']; 
 force_path = [path 'forces/' filedate '_iso/' muscle '_force']; 
 
 %load and filter force data
@@ -70,15 +70,8 @@ mnacc = 1:length(stim_vals);
 pkvels = 1:length(stim_vals); 
 traceacc = {}; 
 for i=1:length(stim_vals)
-    %read in the Vicon file
-%     path = ['/Users/mariajantz/Documents/Work/data/kinematics/' filedate '_files/' ratName num2str(i+startnum-1, '%02d') '.csv'];
-%     [events,rat,treadmill] = importViconData(path,[filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)],tdmName,ratMks,tdmMks);
-%     
-%     for j=1:length(ratMks)
-%         rat.(ratMks{j}) = rat.(ratMks{j})/4.7243; %calibrate
-%     end
-    path = '/Users/mariajantz/Documents/Work/data/kinematics/processed/'; 
-    load([path filedate '_' num2str(i+startnum-1, '%02d') '_rat.mat']); 
+    %read in the kinematics file
+    load([kin_path filedate '_' num2str(i+startnum-1, '%02d') '_rat.mat']); 
     
     %that returns a struct named "rat"
     %import every marker on the rat (oh boy)
@@ -88,9 +81,10 @@ for i=1:length(stim_vals)
     data.z = cell2mat(cellfun(@(x) rat.(x)(:, 3), ratMks, 'UniformOutput', 0));
     figure(1); plot(data.x(:, 11));
     
-    [traceacc{i}, mnacc(i), pkvels(i)] = accfilt(data, cutoff); 
-    
+    [traceacc{i}, mnacc(i), pkvels(i)] = accfilt(data, cutoff);     
 end
 
+%TODO: update the accfilt function to return the individual 
+%xyz vals, not just the magnitude. Also, joint angles. 
 
 
