@@ -19,3 +19,4 @@ ax = gca;
 cur_xlabel = cell2mat(cellfun(@(x) str2num(x), ax.XTickLabel, 'UniformOutput', 0));
 ax.XTickLabel = round(cur_xlabel, 1);
 title(['corr = ' num2str(corr2(t2, force_mnmag))]); 
+

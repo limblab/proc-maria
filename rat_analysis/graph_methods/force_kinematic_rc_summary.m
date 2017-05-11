@@ -11,7 +11,7 @@ muscle = 'IP';
 
 %set paths
 path = '/Users/mariajantz/Documents/Work/data/';
-kin_path = [path 'kinematics/' filedate '_files/processed/']; 
+kin_path = [path 'kinematics/processed/']; 
 force_path = [path 'forces/' filedate '_iso/' muscle '_force']; 
 
 %load and filter force data
@@ -63,6 +63,7 @@ fig_prefs(gca, stim_vals);
 ratMks  = {'spine_top','spine_bottom','hip_top', 'hip_middle', 'hip_bottom', ...
     'femur_mid', 'knee', 'tibia_mid', 'heel', 'foot_mid', 'toe', 'reference_a', 'reference_p'};
 tdmName = ''; tdmMks = [];
+ratAng = {'limb', 'hip', 'knee', 'ankle'};
 
 cutoff=50;
 
@@ -75,16 +76,50 @@ for i=1:length(stim_vals)
     
     %that returns a struct named "rat"
     %import every marker on the rat (oh boy)
-    %data is unfiltered version, data2 is filtered version
+    %data is unfiltered version
     data.x = cell2mat(cellfun(@(x) rat.(x)(:, 1), ratMks, 'UniformOutput', 0));
     data.y = cell2mat(cellfun(@(x) rat.(x)(:, 2), ratMks, 'UniformOutput', 0));
     data.z = cell2mat(cellfun(@(x) rat.(x)(:, 3), ratMks, 'UniformOutput', 0));
-    figure(1); plot(data.x(:, 11));
+    %add the angles
+    data.angles = cell2mat(cellfun(@(x) rat.angles.(x)(:, 1), ratAng, 'UniformOutput', 0));
+
+    figure(2); plot(data.x(:, 11));
     
-    [traceacc{i}, mnacc(i), pkvels(i)] = accfilt(data, cutoff);     
+    [locs(i), traceacc{i}, mnacc(i), pkvels(i)] = accfilt(data, cutoff);     
 end
 
 %TODO: update the accfilt function to return the individual 
-%xyz vals, not just the magnitude. Also, joint angles. 
+%xyz vals, not just the magnitude. Also, joint angles.
+
+%calculate traces
+t = cell2mat(cellfun(@(x) mean(x), traceacc, 'UniformOutput', 0));
+t2 = cell2mat(cellfun(@(x) mean(x(2:end)), traceacc, 'UniformOutput', 0));
+
+subplot(3, 3, 4);
+plot(stim_vals, t2,  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+title('Accel Trace'); 
+fig_prefs(gca, stim_vals); 
+
+%plot joint angle accel values
+%take the locs variable, then get and filter the joint angle
+%acceleration at all of those points
+
+
+
+%normalize and plot endpoint accel - multiple trace options
+subplot(3, 3, 6); hold on; 
+title('Diff traces'); 
+plot(stim_vals, force_mnmag/max(force_mnmag),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, mnacc/max(mnacc),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, t/max(t),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, t2/max(t2),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+fig_prefs(gca, stim_vals); 
+
+leg_info = {'force', ['mnacc ' num2str(corr2(mnacc, force_mnmag))], ...
+['t ' num2str(corr2(t, force_mnmag))], ['t2 ' num2str(corr2(t2, force_mnmag))]}; 
+legend(leg_info); 
+
+
+%save vals calculated
 
 

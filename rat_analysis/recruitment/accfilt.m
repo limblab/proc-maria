@@ -1,4 +1,4 @@
-function [traceacc, mnacc, pkvel] = accfilt(data, cutoff)
+function [locs, traceacc, mnacc, pkvel] = accfilt(data, cutoff)
 % input data with x, y, z fields
 % input b, a
 %make filter (but don't apply)
@@ -134,6 +134,9 @@ mnacc = mean(diff(initvel));
 % traces
 traceacc = trace(locs(p)-idx-1:locs(p)-1);
 %hmm. okay. Why does the other version track so much more closely?
+
+
+%filter the angles the same way, if they are present in the array
 
 
 end
