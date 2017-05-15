@@ -25,7 +25,7 @@ p = 1;
 %if that cutoff value was too high, find lower options
 figure(201);
 if length(pks)==0
-    findpeaks(data2.velmag, 'MinPeakHeight', 0.05)
+    findpeaks(fdata.mag_vel, 'MinPeakHeight', 0.05)
     [pks, locs] = findpeaks(fdata.mag_vel, 'MinPeakHeight', 0.05);
 else
     findpeaks(fdata.mag_vel, 'MinPeakHeight', 0.2)
@@ -41,15 +41,13 @@ disp(pks(p));
 %find first data point where the velocity magnitude < .1 preceding
 %locs[1]
 if pks(p)<0.4
-    figure(200);
-    findpeaks(fdata.mag_vel, 'MinPeakHeight', 0.2)
     %show the peak locations of any high peaks
     %sort the array with the indices and display first 6 vals
     [sorted,sortingIndices] = sort(pks,'descend');
     if length(sorted)>5
-        a = [sorted(1:6), sortingIndices(1:6)]
+        a = [sorted(1:6), round(sortingIndices(1:6), 0)]
     end
-    p=input('Which peak should be used for calculation of initial acceleration? (For other index type 100) ');
+    p=input('Which peak should be used for calculation of initial acceleration? (For other index type 100): ');
     
 end
 
@@ -62,7 +60,7 @@ else
     pkvel = pks(p);
     val = pks(p);
 end
-idx=1;
+idx=3;
 %TODO: I THINK THIS IS A PROBLEM
 while val>0.08
     idx=idx+1;
@@ -73,7 +71,7 @@ initvel = fdata.mag_vel(locs(p)-idx:locs(p));
 mnacc = mean(diff(initvel));
 % NOTE: compare this mean acceleration value to the version from the
 % traces
-traceacc = trace(locs(p)-idx-1:locs(p)-1);
+traceacc = fdata.mag_acc(locs(p)-idx-1:locs(p)-1);
 %hmm. okay. Why does the other version track so much more closely?
 
 
