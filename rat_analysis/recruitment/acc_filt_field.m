@@ -1,10 +1,9 @@
 function [data] = acc_filt_field(field, cutoff)
-% TODO - CHECK TODO STATEMENTS
 % input data with x, y, z fields
 % input b, a
 %make filter (but don't apply)
 [b,a] = butter(4,cutoff/100);
-data.u = field; 
+data.u = field;
 
 %fill NaNs
 ind = [1:length(data.u)].';
@@ -20,9 +19,9 @@ end
 
 %get mean starting values
 %apply filter
-nsamp = size(data.u, 1); 
-base = repmat(mean(data.u(1:20, :)), nsamp, 1); 
-data.ufilt = filter(b, a, data.u-base); 
+nsamp = size(data.u, 1);
+base = repmat(mean(data.u(1:20, :)), nsamp, 1);
+data.ufilt = filter(b, a, data.u-base);
 %figure(2); plot(data2.x(:, 11));
 
 %differentiate = dx
@@ -36,21 +35,14 @@ base = repmat(mean(data.du(1:20,:)),nsamp,1);
 data.du_filt = filter(b,a,data.du-base)+base;
 %figure(4); plot(data2.dx(:, 11));
 
-%get magnitude of velocity of endpoint - TODO - OUTSIDE
-
 data.ddu = diff(data.du_filt);
-%figure(5); plot(data.ddx(:, 11));
-%get the trace thing, not sure what's going on here honestly
-%disp('now do trace');
 
-%trace the endpoint marker
-data.tr_acc = data.ddu(:,11);
-data.tr_vel = data.du(:,11);
-data.tr_pos = data.u(:,11);
+%trace the endpoint marker, if calculating xyz, ignore if calculating angles
+if size(data.ddu, 2)>10
+    data.tr_acc = data.ddu(:,11);
+    data.tr_vel = data.du(:,11);
+    data.tr_pos = data.u(:,11);
+end
 %figure(6); plot(data.ddx(:, 11));
 
-%TODO - deal with this outside 
-%trace = sqrt(data.ddx(:,11).^2 + data.ddy(:,11).^2 + data.ddz(:,11).^2);
-
-%TODO - use velmag to find locs, outside
 end

@@ -83,9 +83,9 @@ for i=1:length(stim_vals)
     %add the angles
     data.angles = cell2mat(cellfun(@(x) rat.angles.(x)(:, 1), ratAng, 'UniformOutput', 0));
 
-    figure(2); plot(data.x(:, 11));
+    %figure(2); plot(data.x(:, 11));
     
-    [locs(i), traceacc{i}, mnacc(i), pkvels(i)] = accfilt(data, cutoff);     
+    [locs(i), traceacc{i}, mnacc(i), pkvels(i)] = accfilt2(data, cutoff);     
 end
 
 %TODO: update the accfilt function to return the individual 

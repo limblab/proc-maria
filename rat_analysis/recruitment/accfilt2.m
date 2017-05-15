@@ -2,41 +2,39 @@ function [locs, traceacc, mnacc, pkvel] = accfilt2(data, cutoff)
 % input data with x, y, z, angles fields
 % input b, a
 
-%%%%%%%%%%% UNTESTED - TODO
 %filter each field in accfilt
 nms = fieldnames(data); 
 for n=1:length(nms)
-    fdata.(nms(n)) = acc_filt_field(data.(nms(n)), cutoff); 
+    fdata.(nms{n}) = acc_filt_field(data.(nms{n}), cutoff);
 end
 %calculate velocity magnitude
 %cripes this is going to be a bit of a mess
 %figure out how to call it based on what's returned
-fdata.velmag = sqrt(data2.dx(:,11).^2 + data2.dy(:,11).^2 + data2.dz(:,11).^2);
+fdata.mag_vel = sqrt(fdata.x.du(:,11).^2 + fdata.y.du(:,11).^2 + fdata.z.du(:,11).^2);
 %magnitude of endpoint trace
-fdata.trace = sqrt(data.ddx(:,11).^2 + data.ddy(:,11).^2 + data.ddz(:,11).^2);
+fdata.mag_acc = sqrt(fdata.x.ddu(:,11).^2 + fdata.y.ddu(:,11).^2 + fdata.z.ddu(:,11).^2);
 
-
-%%%%%%%%%%%
-
-
+%%%%%%%%%%%UNTESTED - TODO
 
 %FINALLY, find the best section of the code to use as the point for
 %comparison to force
 %this gets pretty close to getting the first peak (as determined by the
 %first significant spike in magnitude of velocity)
-[pks, locs] = findpeaks(data2.velmag, 'MinPeakHeight', 0.2);
+[pks, locs] = findpeaks(fdata.mag_vel, 'MinPeakHeight', 0.2);
 p = 1;
 %if that cutoff value was too high, find lower options
+figure(201);
 if length(pks)==0
-    figure(201);
     findpeaks(data2.velmag, 'MinPeakHeight', 0.05)
-    [pks, locs] = findpeaks(data2.velmag, 'MinPeakHeight', 0.05);
+    [pks, locs] = findpeaks(fdata.mag_vel, 'MinPeakHeight', 0.05);
+else
+    findpeaks(fdata.mag_vel, 'MinPeakHeight', 0.2)
 end
 %if that cutoff is still too high, there was basically no movement -
 %set to zero
 if length(pks)==0
     pks = 0;
-    locs = int8(length(data2.velmag)/2);
+    locs = int8(length(fdata.mag_vel)/2);
 end
 disp(pks(p));
 %then take whatever's at locs[1] and
@@ -44,7 +42,7 @@ disp(pks(p));
 %locs[1]
 if pks(p)<0.4
     figure(200);
-    findpeaks(data2.velmag, 'MinPeakHeight', 0.2)
+    findpeaks(fdata.mag_vel, 'MinPeakHeight', 0.2)
     %show the peak locations of any high peaks
     %sort the array with the indices and display first 6 vals
     [sorted,sortingIndices] = sort(pks,'descend');
@@ -57,7 +55,7 @@ end
 
 if p==100
     locs(end+1) = input('What is the index of the peak? ');
-    pkvel = data2.velmag(locs(end)); 
+    pkvel = fdata.mag_vel(locs(end)); 
     val = pkvel; 
     p = length(locs); 
 else
@@ -65,12 +63,13 @@ else
     val = pks(p);
 end
 idx=1;
+%TODO: I THINK THIS IS A PROBLEM
 while val>0.08
     idx=idx+1;
-    val = data2.velmag(locs(p)-idx);
+    val = fdata.mag_vel(locs(p)-idx);
 end
 
-initvel = data2.velmag(locs(p)-idx:locs(p));
+initvel = fdata.mag_vel(locs(p)-idx:locs(p));
 mnacc = mean(diff(initvel));
 % NOTE: compare this mean acceleration value to the version from the
 % traces
