@@ -12,7 +12,7 @@ function [cp, cran, screws] = cran_calc(bregma_coords, array_cpcoords_mm)
 
 % dimensions of the craniotomy (leave a little wiggle room around the array)
 %cran_dim = [2.25, 2.5]; %long way going anterior-posterior
-cran_dim = [3.3, 2.625]; %long way going medial-lateral
+cran_dim = [3.0, 3.0]; %long way going medial-lateral
 screw_dist = 3; %screws should be placed at least 2 mm away from craniotomy
 
 cp = bregma_coords + array_cpcoords_mm*1000;

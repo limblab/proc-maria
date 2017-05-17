@@ -1,4 +1,4 @@
-function [locs, traceacc, mnacc, pkvel] = accfilt2(data, cutoff)
+function [loc, traceacc, mnacc, pkvel, fdata] = accfilt2(data, cutoff)
 % input data with x, y, z, angles fields
 % input b, a
 
@@ -72,6 +72,7 @@ mnacc = mean(diff(initvel));
 % NOTE: compare this mean acceleration value to the version from the
 % traces
 traceacc = fdata.mag_acc(locs(p)-idx-1:locs(p)-1);
+loc = locs(p); 
 %hmm. okay. Why does the other version track so much more closely?
 
 

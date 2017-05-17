@@ -28,7 +28,12 @@ cutoff = 500;
 
 %filter and get magnitudes and angles between direction vectors
 [fdata, allmag, allang, allang2] = forcefilt(out_struct.data, out_struct.calmat, b, a);
+figure(1);
+set(gcf, 'Position', [100, 155, 1200, 800]);  
+subplot(3, 3, 1);
+
 mnrange = 2350:2800; 
+
 mnang1 = mean(allang(:, mnrange)');
 mnang2 = mean(allang2(:, mnrange)');
 force_mnmag = []; 
@@ -37,8 +42,7 @@ for i=1:size(allmag, 1)
     force_mnmag(i) = mean(allmag(i, mnrange)); 
 end
 %then plot each of those vectors, kind of on top of each other?
-figure; 
-subplot(3, 3, 1);
+
 plot(stim_vals, force_mnmag, '-d', 'LineWidth', 3, 'MarkerSize', 5);
 fig_prefs(gca, stim_vals);
 title('Force Mag'); 
@@ -70,6 +74,8 @@ cutoff=50;
 mnacc = 1:length(stim_vals); 
 pkvels = 1:length(stim_vals); 
 traceacc = {}; 
+locs = zeros(1, length(stim_vals));  
+fdata = {}; 
 for i=1:length(stim_vals)
     %read in the kinematics file
     load([kin_path filedate '_' num2str(i+startnum-1, '%02d') '_rat.mat']); 
@@ -85,17 +91,18 @@ for i=1:length(stim_vals)
 
     %figure(2); plot(data.x(:, 11));
     
-    [locs(i), traceacc{i}, mnacc(i), pkvels(i)] = accfilt2(data, cutoff);     
+    [locs(i), traceacc{i}, mnacc(i), pkvels(i), fdata{i}] = accfilt2(data, cutoff);     
 end
 
 %TODO: update the accfilt function to return the individual 
 %xyz vals, not just the magnitude. Also, joint angles.
 
 %calculate traces
+disp('wait'); 
 t = cell2mat(cellfun(@(x) mean(x), traceacc, 'UniformOutput', 0));
 t2 = cell2mat(cellfun(@(x) mean(x(2:end)), traceacc, 'UniformOutput', 0));
 
-subplot(3, 3, 4);
+figure(1); subplot(3, 3, 4);
 plot(stim_vals, t2,  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 title('Accel Trace'); 
 fig_prefs(gca, stim_vals); 
@@ -104,6 +111,13 @@ fig_prefs(gca, stim_vals);
 %take the locs variable, then get and filter the joint angle
 %acceleration at all of those points
 
+%get angles from fdata arrays, use those values at the locs values to
+%calculate mean angles (say 3 points before?)
+
+subplot(3, 3, 5);
+plot(stim_vals, t2,  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+title('Joint \Theta'); 
+fig_prefs(gca, stim_vals); 
 
 
 %normalize and plot endpoint accel - multiple trace options
@@ -115,11 +129,11 @@ plot(stim_vals, t/max(t),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 plot(stim_vals, t2/max(t2),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 fig_prefs(gca, stim_vals); 
 
-leg_info = {'force', ['mnacc ' num2str(corr2(mnacc, force_mnmag))], ...
+leg_info = {'force', ['mnacc ' num2str(round(corr2(mnacc, force_mnmag), 2))], ...
 ['t ' num2str(corr2(t, force_mnmag))], ['t2 ' num2str(corr2(t2, force_mnmag))]}; 
 legend(leg_info); 
 
 
-%save vals calculated
+%save vals calculated, save peak locations in the 
 
 
