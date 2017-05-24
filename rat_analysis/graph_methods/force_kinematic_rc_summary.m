@@ -6,8 +6,8 @@ clear all; close all;
 
 %set variables for each run
 filedate = '170503'; 
-startnum = 1; 
-muscle = 'IP'; 
+startnum = 16; 
+muscle = 'GS'; 
 
 %set paths
 path = '/Users/mariajantz/Documents/Work/data/';
@@ -29,7 +29,7 @@ cutoff = 500;
 %filter and get magnitudes and angles between direction vectors
 [fdata, allmag, allang, allang2] = forcefilt(out_struct.data, out_struct.calmat, b, a);
 figure(1);
-set(gcf, 'Position', [100, 155, 1200, 800]);  
+set(gcf, 'Position', [100, 155, 1200, 860]);  
 subplot(3, 3, 1);
 
 mnrange = 2350:2800; 
@@ -48,17 +48,18 @@ fig_prefs(gca, stim_vals);
 title('Force Mag'); 
 subplot(3, 3, 2); hold on; 
 title('Force \Theta'); 
-plot(stim_vals, rad2deg(mnang1), 'linewidth', 2); 
-plot(stim_vals, rad2deg(mnang2), 'linewidth', 2); 
+plot(stim_vals, rad2deg(mnang1),  '-d', 'LineWidth', 3, 'MarkerSize', 5); 
+plot(stim_vals, rad2deg(mnang2),  '-d', 'LineWidth', 3, 'MarkerSize', 5); 
 fig_prefs(gca, stim_vals); 
 hold off; 
 %normalize all of the force magnitude values and plot
 subplot(3, 3, 3); hold on; 
 title('Force XYZ'); 
-plot(stim_vals, cell2mat(cellfun(@(x) mean(x(mnrange, 1)), fdata, 'UniformOutput', 0))); 
-plot(stim_vals, cell2mat(cellfun(@(x) mean(x(mnrange, 2)), fdata, 'UniformOutput', 0))); 
-plot(stim_vals, cell2mat(cellfun(@(x) mean(x(mnrange, 3)), fdata, 'UniformOutput', 0))); 
+plot(stim_vals, cell2mat(cellfun(@(x) mean(x(mnrange, 1)), fdata, 'UniformOutput', 0)),  '-d', 'LineWidth', 3, 'MarkerSize', 5); 
+plot(stim_vals, cell2mat(cellfun(@(x) mean(x(mnrange, 2)), fdata, 'UniformOutput', 0)),  '-d', 'LineWidth', 3, 'MarkerSize', 5); 
+plot(stim_vals, cell2mat(cellfun(@(x) mean(x(mnrange, 3)), fdata, 'UniformOutput', 0)),  '-d', 'LineWidth', 3, 'MarkerSize', 5); 
 fig_prefs(gca, stim_vals); 
+legend({'x', 'y', 'z'}); 
 
 
 %kinematic values: find peaks
@@ -74,8 +75,8 @@ cutoff=50;
 mnacc = 1:length(stim_vals); 
 pkvels = 1:length(stim_vals); 
 traceacc = {}; 
-locs = zeros(1, length(stim_vals));  
-fdata = {}; 
+locs = {};  
+vfdata = {}; 
 for i=1:length(stim_vals)
     %read in the kinematics file
     load([kin_path filedate '_' num2str(i+startnum-1, '%02d') '_rat.mat']); 
@@ -83,24 +84,26 @@ for i=1:length(stim_vals)
     %that returns a struct named "rat"
     %import every marker on the rat (oh boy)
     %data is unfiltered version
-    data.x = cell2mat(cellfun(@(x) rat.(x)(:, 1), ratMks, 'UniformOutput', 0));
-    data.y = cell2mat(cellfun(@(x) rat.(x)(:, 2), ratMks, 'UniformOutput', 0));
-    data.z = cell2mat(cellfun(@(x) rat.(x)(:, 3), ratMks, 'UniformOutput', 0));
+    %most peaks occur between point 220 and 240 in the data so only look at that
+    %section
+    data.x = cell2mat(cellfun(@(x) rat.(x)(200:260, 1), ratMks, 'UniformOutput', 0));
+    data.y = cell2mat(cellfun(@(x) rat.(x)(200:260, 2), ratMks, 'UniformOutput', 0));
+    data.z = cell2mat(cellfun(@(x) rat.(x)(200:260, 3), ratMks, 'UniformOutput', 0));
     %add the angles
-    data.angles = cell2mat(cellfun(@(x) rat.angles.(x)(:, 1), ratAng, 'UniformOutput', 0));
+    data.angles = cell2mat(cellfun(@(x) rat.angles.(x)(200:260, 1), ratAng, 'UniformOutput', 0));
 
     %figure(2); plot(data.x(:, 11));
     
-    [locs(i), traceacc{i}, mnacc(i), pkvels(i), fdata{i}] = accfilt2(data, cutoff);     
+    [locs{i}, traceacc{i}, mnacc(i), pkvels(i), vfdata{i}] = accfilt2(data, cutoff);     
 end
 
 %TODO: update the accfilt function to return the individual 
 %xyz vals, not just the magnitude. Also, joint angles.
 
 %calculate traces
-disp('wait'); 
 t = cell2mat(cellfun(@(x) mean(x), traceacc, 'UniformOutput', 0));
 t2 = cell2mat(cellfun(@(x) mean(x(2:end)), traceacc, 'UniformOutput', 0));
+t3 = cell2mat(cellfun(@(x) mean(x(1:end-1)), traceacc, 'UniformOutput', 0));
 
 figure(1); subplot(3, 3, 4);
 plot(stim_vals, t2,  '-d', 'LineWidth', 3, 'MarkerSize', 5);
@@ -111,29 +114,56 @@ fig_prefs(gca, stim_vals);
 %take the locs variable, then get and filter the joint angle
 %acceleration at all of those points
 
-%get angles from fdata arrays, use those values at the locs values to
+%get angles from vfdata arrays, use those values at the locs values to
 %calculate mean angles (say 3 points before?)
-
+ang_mean = zeros(length(stim_vals), 4);
+for i=1:length(vfdata)
+    A = vfdata{i}.angles.ddu(locs{i}, :); 
+    disp(A);
+    A(any(isnan(A), 2),:)=[];
+    ang_mean(i, :) = mean(A); 
+end
 subplot(3, 3, 5);
-plot(stim_vals, t2,  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, ang_mean,  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 title('Joint \Theta'); 
 fig_prefs(gca, stim_vals); 
+legend(ratAng); 
+
+%endpoint trace XYZ vals
+tr_mean = zeros(length(stim_vals), 3);
+for i=1:length(vfdata)
+    A = [vfdata{i}.x.ddu(locs{i}, 11) vfdata{i}.y.ddu(locs{i}, 11) vfdata{i}.z.ddu(locs{i}, 11)]; 
+    disp(A);
+    A(any(isnan(A), 2),:)=[];
+    tr_mean(i, :) = mean(A); 
+end
+subplot(3, 3, 6); hold on;
+plot(stim_vals, tr_mean,  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+title('Endpoint XYZ acc'); 
+fig_prefs(gca, stim_vals); 
+legend({'x', 'y', 'z'}); 
 
 
 %normalize and plot endpoint accel - multiple trace options
-subplot(3, 3, 6); hold on; 
+subplot(3, 3, [7 8 9]); hold on; 
 title('Diff traces'); 
 plot(stim_vals, force_mnmag/max(force_mnmag),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 plot(stim_vals, mnacc/max(mnacc),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 plot(stim_vals, t/max(t),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 plot(stim_vals, t2/max(t2),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, t3/max(t3),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 fig_prefs(gca, stim_vals); 
 
-leg_info = {'force', ['mnacc ' num2str(round(corr2(mnacc, force_mnmag), 2))], ...
-['t ' num2str(corr2(t, force_mnmag))], ['t2 ' num2str(corr2(t2, force_mnmag))]}; 
+leg_info = {'force', ['mnacc ' num2str(round(corr2(mnacc, force_mnmag), 3))], ...
+['t ' num2str(round(corr2(t, force_mnmag), 3))], ['t2 ' num2str(round(corr2(t2, force_mnmag), 3))], ...
+['t3 ' num2str(round(corr2(t3, force_mnmag), 3))]}; 
 legend(leg_info); 
 
-
-%save vals calculated, save peak locations in the 
-
+%save vals calculated, save peak locations in the data file? or in the
+%filtered data file
+%stim_vals, ratMks, ratAng, kinematics - vfdata, t, t2, t3, mnacc, locs; forces - fdata,
+%allmag, allang, allang2, mnang1, mnang2, force_mnmag
+save([path '../figures/summary/force_kinematic_rc/' muscle '_' filedate '.mat'], ...
+    'stim_vals', 'ratMks', 'ratAng', 'vfdata', 't', 't2', 't3', 'mnacc', 'locs', ...
+    'fdata', 'allmag', 'allang', 'allang2', 'mnang1', 'mnang2', 'force_mnmag'); 
 

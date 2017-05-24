@@ -35,12 +35,12 @@ end
 if length(pks)==0
     pks = 0;
     locs = int8(length(fdata.mag_vel)/2);
-end
-disp(pks(p));
+
+    disp(pks(p));
 %then take whatever's at locs[1] and
 %find first data point where the velocity magnitude < .1 preceding
 %locs[1]
-if pks(p)<0.4
+elseif pks(p)<0.4
     %show the peak locations of any high peaks
     %sort the array with the indices and display first 6 vals
     [sorted,sortingIndices] = sort(pks,'descend');
@@ -72,7 +72,7 @@ mnacc = mean(diff(initvel));
 % NOTE: compare this mean acceleration value to the version from the
 % traces
 traceacc = fdata.mag_acc(locs(p)-idx-1:locs(p)-1);
-loc = locs(p); 
+loc = (locs(p)-idx):locs(p); 
 %hmm. okay. Why does the other version track so much more closely?
 
 
