@@ -1,213 +1,235 @@
 %step summary graphs
+%TODO: figure out whether kinematics are sampled at 100 or 200 Hz and
+%relabel axes accordingly
+%TODO: deal with weird labeling on trials that have a spike "back" and then
+%forward - what's swing, what's stance? 
 %first import rats to compare
 clear all; close all;
 
 %set variables for each run
 
-%filenum = 99;
-pkdist = 220;
-err_trials = []; %rig this up for catch trials? maybe not optimal
+pkdist = 140;
+err_trials = []; %rig this up for catching errored trials
 
-for filenum=[2:3]
-    if exist('filedate')
-        clear('filedate', 'sw_idx', 'pk_positions', 'extreme_vals');
-        close all;
+for filenum=[6 10 14 20 23 25 26]
+    try
+        if exist('filedate')
+            clear('filedate', 'sw_idx', 'pk_positions', 'extreme_vals');
+            close all;
+        end
+        filedate = '161006';
+        %set paths
+        path = '/Users/mariajantz/Documents/Work/data/';
+        kin_path = [path 'kinematics/processed/' filedate '_' num2str(filenum, '%02d') '_rat.mat'];
+        %load data
+        load(kin_path);
+        
+        
+        
+        %next draw all traces for a trial, relative to the hip marker at zero
+        figure(1); subplot(4, 4, [3 4 7 8 11 12]); hold on;
+        rel_endpoint = rat.toe-rat.hip_bottom;
+        finpt = min(4000, size(rel_endpoint, 1)); 
+        plot(rel_endpoint(1:finpt, 1), rel_endpoint(1:finpt, 2))
+        title([filedate ' Trial ' num2str(filenum)]);
+        
+        %on that graph, plot the high/low and front/back points (for height and length)
+        %deal with step splitting somehow??? um. drat. okay here goes.
+        
+        %find the peaks, then pick the ten highest, invert, and pick ten lowest -
+        %those are the high/low and front/back points in the steps.
+        %Note: "front" goes negatively on the x axis
+        
+        pk_positions = struct();
+        figure(2); subplot(2, 2, 1); hold on;
+        findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist)
+        title('Back peaks');
+        [pk_positions.b_pks, pk_positions.b_locs] = findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist);
+        inv_arr = max(rel_endpoint(1:finpt, 1))*1.01 - rel_endpoint(1:finpt, 1);
+        subplot(2, 2, 2); findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1)
+        title('Forward peaks');
+        [f_pks, pk_positions.f_locs] = findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1); 
+        pk_positions.f_pks = rel_endpoint(pk_positions.f_locs, 1);
+        
+        %front and back peak locations are also a good way to denote swing and
+        %stance phases - swing starts at the back and goes forward - so pick the
+        %top ten and then sort them
+        %%%%%%
+        %TODO: check that front peak #1 happens before back peak #1, deal with
+        %this.
+        f_vals = sort(pk_positions.f_locs(1:11));
+        b_vals = sort(pk_positions.b_locs(1:11));
+%         if f_vals(1)>b_vals(1) %TODO: this is kind of janky
+%             B = [pk_positions.b_locs(1:12), pk_positions.b_pks(1:12)]; %makes a matrix
+%             [values, order] = sort(B(:,1));
+%             sortedB = B(order,:); 
+%
+%             b_vals = sort(pk_positions.b_locs(1:12));
+%             b_vals(1) = [];
+%         end
+        %just use swing phase, and do the overlay+avg of hip, knee, ankle angles
+        
+        %TODO: SWITCH THIS BACK VERY IMPORTANT
+        %TODO: FIGURE OUT WHY THIS NEEDS TO BE SWITCHED AND WHAT'S
+        %HAPPENING
+        sw_idx = [b_vals(1:11) f_vals(1:11)];
+        
+        %choose indices to exclude when determining high peaks - otherwise the back
+        %swing of the foot gets included
+        vals = [];
+        %plot angles
+        figure(3);
+        set(gcf, 'Position', [380 150 1300 380]);
+        h_arr = {};
+        k_arr = {};
+        a_arr = {};
+        for i=1:10
+            subplot(1, 3, 1); hold on;
+            plot(rat.angles.hip(sw_idx(i, 1):sw_idx(i+1, 1)));
+            h_arr{i} = rat.angles.hip(sw_idx(i, 1):sw_idx(i+1, 1));
+            subplot(1, 3, 2); hold on;
+            plot(rat.angles.knee(sw_idx(i, 1):sw_idx(i+1, 1)));
+            k_arr{i} = rat.angles.knee(sw_idx(i, 1):sw_idx(i+1, 1));
+            subplot(1, 3, 3); hold on;
+            plot(rat.angles.ankle(sw_idx(i, 1):sw_idx(i+1, 1)));
+            a_arr{i} = rat.angles.ankle(sw_idx(i, 1):sw_idx(i+1, 1));
+        end
+        subplot(1, 3, 1); title('Hip');
+        plot(mean(upsamp(h_arr)), 'linewidth', 2, 'color', 'k');
+        subplot(1, 3, 2); title('Knee');
+        plot(mean(upsamp(k_arr)), 'linewidth', 2, 'color', 'k');
+        subplot(1, 3, 3); title('Ankle');
+        plot(mean(upsamp(a_arr)), 'linewidth', 2, 'color', 'k');
+        
+        for i = 1:size(sw_idx, 1)-1
+            diffval = round((sw_idx(i+1, 1)-sw_idx(i, 2))/3, 0);
+            vals = [vals sw_idx(i+1, 1)-diffval:sw_idx(i+1, 1)];
+            %vals = [vals sw_idx(i, 2)-dist:sw_idx(i, 2)+dist];
+        end
+        idx = setdiff(1:size(rel_endpoint, 1), vals);
+        temp = rel_endpoint(1:finpt, 2);
+        temp(idx) = rel_endpoint(1, 2)-100;
+        
+        figure(2);
+        subplot(2, 2, 3); findpeaks(temp, 'SortStr', 'descend', 'MinPeakDistance', pkdist)
+        title('High peaks');
+        [pk_positions.h_pks, pk_positions.h_locs] = findpeaks(temp, 'SortStr', 'descend', 'MinPeakDistance', pkdist);
+        inv_arr = max(rel_endpoint(1:finpt, 2))*1.01 - rel_endpoint(1:finpt, 2);
+        subplot(2, 2, 4); findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist)
+        title('Low peaks');
+        %different way of finding low peaks to set window correctly
+        %low peaks - this is the most effective way to find them
+        for i=1:10
+            %find the correct section of step
+            %find the minimum value and index within that section
+            %subplot(4, 4, fig_idx(i)); hold on;
+            pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2));
+            pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
+            
+            %plot
+            %plot(rel_endpoint(alt_l_locs(i), 1), rel_endpoint(alt_l_locs(i), 2), 'o', 'color', 'g', 'linewidth', 3);
+        end
+        pk_positions.l_pks = pk_positions.l_pks';
+        pk_positions.l_locs = pk_positions.l_locs';
+        % [l_pks, pk_positions.l_locs] = findpeaks(inv_arr(min(pk_positions.h_locs):end, :), 'SortStr', 'descend', 'MinPeakDistance', pkdist);
+        % pk_positions.l_pks = rel_endpoint(pk_positions.l_locs, 2);
+        % pk_positions.l_locs = pk_positions.l_locs + min(pk_positions.h_locs);
+        
+        if size(pk_positions.l_locs, 1)==10
+            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 0] [sort(pk_positions.l_locs(1:10)); 0]];
+        else
+            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 0] sort(pk_positions.l_locs(1:11))];
+        end
+        
+        %plot the peaks chosen to check that correct ones were chosen
+        figure(2); subplot(2, 2, 1); hold on;
+        plot(pk_positions.b_locs(1:length(sw_idx(:, 1))), pk_positions.b_pks(1:length(sw_idx(:, 1))), 'o', 'color', 'r', 'linewidth', 3);
+        figure(2); subplot(2, 2, 2); hold on;
+        plot(pk_positions.f_locs(1:length(sw_idx(:, 1))), f_pks(1:length(sw_idx(:, 1))), 'o', 'color', 'r', 'linewidth', 3);
+        figure(2); subplot(2, 2, 3); hold on;
+        plot(pk_positions.h_locs(1:10), pk_positions.h_pks(1:10), 'o', 'color', 'r', 'linewidth', 3);
+        figure(2); subplot(2, 2, 4); hold on;
+        plot(pk_positions.l_locs(1:10), inv_arr(pk_positions.l_locs(1:10)), 'o', 'color', 'r', 'linewidth', 3);
+        fig = gcf;
+        fig.Position = [100 155 1000 800];
+        
+        %check this by plotting each full step, splitting the parts
+        figure(1);
+        fig_idx = [1 2 5 6 9 10 13 14 15 16];
+        for step=1:size(sw_idx, 1)-1
+            subplot(4, 4, fig_idx(step)); hold on;
+            title(['Step ' num2str(step)]);
+            %plot stance
+            plot(rel_endpoint(sw_idx(step, 1):sw_idx(step, 2), 1), rel_endpoint(sw_idx(step, 1):sw_idx(step, 2), 2), 'color', 'b', 'linewidth', 2);
+            %plot swing
+            plot(rel_endpoint(sw_idx(step, 2):sw_idx(step+1, 1), 1), rel_endpoint(sw_idx(step, 2):sw_idx(step+1, 1), 2), 'color', 'r', 'linewidth', 2);
+            %plot starting point
+            plot(rel_endpoint(sw_idx(step, 1), 1), rel_endpoint(sw_idx(step, 1), 2), 'o', 'color', 'k', 'linewidth', 3);
+            plot(rel_endpoint(sw_idx(step, 2), 1), rel_endpoint(sw_idx(step, 2), 2), 'o', 'color', 'k', 'linewidth', 3);
+            %plot high and low points
+            plot(rel_endpoint(sw_idx(step, 3), 1), rel_endpoint(sw_idx(step, 3), 2), 'o', 'color', 'k', 'linewidth', 3);
+            plot(rel_endpoint(sw_idx(step, 4), 1), rel_endpoint(sw_idx(step, 4), 2), 'o', 'color', 'k', 'linewidth', 3);
+        end
+        fig = gcf;
+        fig.Position = [500 155 1200 800];
+        
+        %calculate and draw average trace of trial minus 1st and last step
+        %make each step the same length (start with second, end before last)
+        %average these together - maybe just make into cell array and send to
+        %dnsamp function that I use to design the arrays
+        trace_x = {};
+        trace_y = {};
+        trace_z = {};
+        for i=2:size(sw_idx, 1)-1
+            trace_x{end+1} = rel_endpoint(sw_idx(i, 1):sw_idx(i+1, 1), 1);
+            trace_y{end+1} = rel_endpoint(sw_idx(i, 1):sw_idx(i+1, 1), 2);
+            trace_z{end+1} = rel_endpoint(sw_idx(i, 1):sw_idx(i+1, 1), 3);
+        end
+        up_endpt = [upsamp(trace_x); upsamp(trace_y); upsamp(trace_z)];
+        mn_endpt = [mean(upsamp(trace_x)); mean(upsamp(trace_y)); mean(upsamp(trace_z))];
+        figure(1); subplot(4, 4, [3 4 7 8 11 12]); hold on;
+        plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3, 'color', 'k');
+        
+        %
+        % figure; hold on;
+        % temp1 = upsamp(trace_x);
+        % temp2 = upsamp(trace_y);
+        % plot(temp1', temp2', '.-', 'color', 'b');
+        % plot(mean(temp1), mean(temp2), '.-', 'color', 'k', 'linewidth', 3);
+        % figure; hold on;
+        % plot(temp1');
+        % temp1 = temp1(:, 2:end);
+        % xvals = repmat(1:size(temp1, 2), size(temp1, 1), 1);
+        % plot(polyval(polyfit(xvals, temp1, 7), 1:size(temp1, 2)));
+        % temp2 = temp2(:, 2:end);
+        % figure;
+        % plot(polyval(polyfit(xvals, temp2, 7), 1:size(temp2, 2)));
+        % plot(polyval(polyfit(xvals, temp1, 7), 1:size(temp1, 2)), polyval(polyfit(xvals, temp2, 7), 1:size(temp2, 2)))
+        % %uhhh so mean doesn't really work
+        % %do best fit line for each of the sets of traces instead
+        %
+        
+        
+        %%%
+        
+        %calculate avg high and low points, and avg front and back points
+        extreme_vals = struct();
+        ext_fields = {'front', 'back', 'hi', 'lo'};
+        steps = 2:size(sw_idx, 1)-1
+        for i=1:length(ext_fields)
+            extreme_vals.(ext_fields{i}) = rel_endpoint(sw_idx(steps, i), :);
+            plot(mean(extreme_vals.(ext_fields{i})(:, 1)), mean(extreme_vals.(ext_fields{i})(:, 2)), 'o', 'linewidth', 3, 'color', 'r');
+        end
+        steplen = extreme_vals.back(:, 1)-extreme_vals.front(:, 1);
+        avlen = mean(steplen);
+        stepht = extreme_vals.hi(:, 2)-extreme_vals.lo(:, 2);
+        avht = mean(stepht);
+        
+    catch
+        err_trials(end+1) = filenum;
+        disp(['skipping trial ' num2str(filenum)]);
+        continue
     end
-    filedate = '160908';
-    %set paths
-    path = '/Users/mariajantz/Documents/Work/data/';
-    kin_path = [path 'kinematics/processed/' filedate '_' num2str(filenum, '%02d') '_rat.mat'];
-    %load data
-    load(kin_path);
-    
-    %next draw all traces for a trial, relative to the hip marker at zero
-    figure(1); subplot(4, 4, [3 4 7 8 11 12]); hold on;
-    rel_endpoint = rat.toe-rat.hip_bottom;
-    plot(rel_endpoint(:, 1), rel_endpoint(:, 2))
-    title([filedate ' Trial ' num2str(filenum)]);
-    
-    %on that graph, plot the high/low and front/back points (for height and length)
-    %deal with step splitting somehow??? um. drat. okay here goes.
-    
-    %find the peaks, then pick the ten highest, invert, and pick ten lowest -
-    %those are the high/low and front/back points in the steps.
-    %Note: "front" goes negatively on the x axis
-    pk_positions = struct();
-    figure(2); subplot(2, 2, 1); hold on;
-    findpeaks(rel_endpoint(:, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist)
-    title('Back peaks');
-    [pk_positions.b_pks, pk_positions.b_locs] = findpeaks(rel_endpoint(:, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist);
-    inv_arr = max(rel_endpoint(:, 1))*1.01 - rel_endpoint(:, 1);
-    subplot(2, 2, 2); findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist)
-    title('Forward peaks');
-    [f_pks, pk_positions.f_locs] = findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist);
-    pk_positions.f_pks = rel_endpoint(pk_positions.f_locs, 1);
-    
-    %front and back peak locations are also a good way to denote swing and
-    %stance phases - swing starts at the back and goes forward - so pick the
-    %top ten and then sort them
-    %%%%%%
-    %TODO: check that front peak #1 happens before back peak #1, deal with
-    %this.
-    f_vals = sort(pk_positions.f_locs(1:11));
-    b_vals = sort(pk_positions.b_locs(1:11));
-    if f_vals(1)>b_vals(1)
-        b_vals(1) = [];
-    end
-    %just use swing phase, and do the overlay+avg of hip, knee, ankle angles
-    sw_idx = [f_vals(1:11) b_vals(1:11)];
-    
-    %choose indices to exclude when determining high peaks - otherwise the back
-    %swing of the foot gets included
-    vals = [];
-    %plot angles
-    figure(3);
-    set(gcf, 'Position', [380 150 1300 380]);
-    h_arr = {};
-    k_arr = {};
-    a_arr = {};
-    for i=1:10
-        subplot(1, 3, 1); hold on;
-        plot(rat.angles.hip(sw_idx(i, 1):sw_idx(i+1, 1)));
-        h_arr{i} = rat.angles.hip(sw_idx(i, 1):sw_idx(i+1, 1));
-        subplot(1, 3, 2); hold on;
-        plot(rat.angles.knee(sw_idx(i, 1):sw_idx(i+1, 1)));
-        k_arr{i} = rat.angles.knee(sw_idx(i, 1):sw_idx(i+1, 1));
-        subplot(1, 3, 3); hold on;
-        plot(rat.angles.ankle(sw_idx(i, 1):sw_idx(i+1, 1)));
-        a_arr{i} = rat.angles.ankle(sw_idx(i, 1):sw_idx(i+1, 1));
-    end
-    subplot(1, 3, 1); title('Hip');
-    plot(mean(upsamp(h_arr)), 'linewidth', 2, 'color', 'k');
-    subplot(1, 3, 2); title('Knee');
-    plot(mean(upsamp(k_arr)), 'linewidth', 2, 'color', 'k');
-    subplot(1, 3, 3); title('Ankle');
-    plot(mean(upsamp(a_arr)), 'linewidth', 2, 'color', 'k');
-    
-    for i = 1:size(sw_idx, 1)-1
-        diffval = round((sw_idx(i+1, 1)-sw_idx(i, 2))/3, 0);
-        vals = [vals sw_idx(i+1, 1)-diffval:sw_idx(i+1, 1)];
-        %vals = [vals sw_idx(i, 2)-dist:sw_idx(i, 2)+dist];
-    end
-    idx = setdiff(1:size(rel_endpoint, 1), vals);
-    temp = rel_endpoint(:, 2);
-    temp(idx) = rel_endpoint(1, 2)-100;
-    
-    figure(2);
-    subplot(2, 2, 3); findpeaks(temp, 'SortStr', 'descend', 'MinPeakDistance', pkdist)
-    title('High peaks');
-    [pk_positions.h_pks, pk_positions.h_locs] = findpeaks(temp, 'SortStr', 'descend', 'MinPeakDistance', pkdist);
-    inv_arr = max(rel_endpoint(:, 2))*1.01 - rel_endpoint(:, 2);
-    subplot(2, 2, 4); findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist)
-    title('Low peaks');
-    %different way of finding low peaks to set window correctly
-    %low peaks - this is the most effective way to find them
-    for i=1:10
-        %find the correct section of step
-        %find the minimum value and index within that section
-        %subplot(4, 4, fig_idx(i)); hold on;
-        pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2));
-        pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
-        %plot
-        %plot(rel_endpoint(alt_l_locs(i), 1), rel_endpoint(alt_l_locs(i), 2), 'o', 'color', 'g', 'linewidth', 3);
-    end
-    pk_positions.l_pks = pk_positions.l_pks';
-    pk_positions.l_locs = pk_positions.l_locs';
-    % [l_pks, pk_positions.l_locs] = findpeaks(inv_arr(min(pk_positions.h_locs):end, :), 'SortStr', 'descend', 'MinPeakDistance', pkdist);
-    % pk_positions.l_pks = rel_endpoint(pk_positions.l_locs, 2);
-    % pk_positions.l_locs = pk_positions.l_locs + min(pk_positions.h_locs);
-    
-    if size(pk_positions.l_locs, 1)==10
-        sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 0] [sort(pk_positions.l_locs(1:10)); 0]];
-    else
-        sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 0] sort(pk_positions.l_locs(1:11))];
-    end
-    
-    %plot the peaks chosen to check that correct ones were chosen
-    figure(2); subplot(2, 2, 1); hold on;
-    plot(pk_positions.b_locs(1:length(sw_idx(:, 1))), pk_positions.b_pks(1:length(sw_idx(:, 1))), 'o', 'color', 'r', 'linewidth', 3);
-    figure(2); subplot(2, 2, 2); hold on;
-    plot(pk_positions.f_locs(1:length(sw_idx(:, 1))), f_pks(1:length(sw_idx(:, 1))), 'o', 'color', 'r', 'linewidth', 3);
-    figure(2); subplot(2, 2, 3); hold on;
-    plot(pk_positions.h_locs(1:10), pk_positions.h_pks(1:10), 'o', 'color', 'r', 'linewidth', 3);
-    figure(2); subplot(2, 2, 4); hold on;
-    plot(pk_positions.l_locs(1:10), inv_arr(pk_positions.l_locs(1:10)), 'o', 'color', 'r', 'linewidth', 3);
-    fig = gcf;
-    fig.Position = [100 155 1000 800];
-    
-    %check this by plotting each full step, splitting the parts
-    figure(1);
-    fig_idx = [1 2 5 6 9 10 13 14 15 16];
-    for step=1:size(sw_idx, 1)-1
-        subplot(4, 4, fig_idx(step)); hold on;
-        title(['Step ' num2str(step)]);
-        %plot stance
-        plot(rel_endpoint(sw_idx(step, 1):sw_idx(step, 2), 1), rel_endpoint(sw_idx(step, 1):sw_idx(step, 2), 2), 'color', 'b', 'linewidth', 2);
-        %plot swing
-        plot(rel_endpoint(sw_idx(step, 2):sw_idx(step+1, 1), 1), rel_endpoint(sw_idx(step, 2):sw_idx(step+1, 1), 2), 'color', 'r', 'linewidth', 2);
-        %plot starting point
-        plot(rel_endpoint(sw_idx(step, 1), 1), rel_endpoint(sw_idx(step, 1), 2), 'o', 'color', 'k', 'linewidth', 3);
-        plot(rel_endpoint(sw_idx(step, 2), 1), rel_endpoint(sw_idx(step, 2), 2), 'o', 'color', 'k', 'linewidth', 3);
-        %plot high and low points
-        plot(rel_endpoint(sw_idx(step, 3), 1), rel_endpoint(sw_idx(step, 3), 2), 'o', 'color', 'k', 'linewidth', 3);
-        plot(rel_endpoint(sw_idx(step, 4), 1), rel_endpoint(sw_idx(step, 4), 2), 'o', 'color', 'k', 'linewidth', 3);
-    end
-    fig = gcf;
-    fig.Position = [500 155 1200 800];
-    
-    %calculate and draw average trace of trial minus 1st and last step
-    %make each step the same length (start with second, end before last)
-    %average these together - maybe just make into cell array and send to
-    %dnsamp function that I use to design the arrays
-    trace_x = {};
-    trace_y = {};
-    trace_z = {};
-    for i=2:size(sw_idx, 1)-1
-        trace_x{end+1} = rel_endpoint(sw_idx(i, 1):sw_idx(i+1, 1), 1);
-        trace_y{end+1} = rel_endpoint(sw_idx(i, 1):sw_idx(i+1, 1), 2);
-        trace_z{end+1} = rel_endpoint(sw_idx(i, 1):sw_idx(i+1, 1), 3);
-    end
-    up_endpt = [upsamp(trace_x); upsamp(trace_y); upsamp(trace_z)];
-    mn_endpt = [mean(upsamp(trace_x)); mean(upsamp(trace_y)); mean(upsamp(trace_z))];
-    figure(1); subplot(4, 4, [3 4 7 8 11 12]); hold on;
-    plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3, 'color', 'k');
-    
-    %
-    % figure; hold on;
-    % temp1 = upsamp(trace_x);
-    % temp2 = upsamp(trace_y);
-    % plot(temp1', temp2', '.-', 'color', 'b');
-    % plot(mean(temp1), mean(temp2), '.-', 'color', 'k', 'linewidth', 3);
-    % figure; hold on;
-    % plot(temp1');
-    % temp1 = temp1(:, 2:end);
-    % xvals = repmat(1:size(temp1, 2), size(temp1, 1), 1);
-    % plot(polyval(polyfit(xvals, temp1, 7), 1:size(temp1, 2)));
-    % temp2 = temp2(:, 2:end);
-    % figure;
-    % plot(polyval(polyfit(xvals, temp2, 7), 1:size(temp2, 2)));
-    % plot(polyval(polyfit(xvals, temp1, 7), 1:size(temp1, 2)), polyval(polyfit(xvals, temp2, 7), 1:size(temp2, 2)))
-    % %uhhh so mean doesn't really work
-    % %do best fit line for each of the sets of traces instead
-    %
-    
-    
-    %%%
-    
-    %calculate avg high and low points, and avg front and back points
-    extreme_vals = struct();
-    ext_fields = {'front', 'back', 'hi', 'lo'};
-    steps = 2:size(sw_idx, 1)-1
-    for i=1:length(ext_fields)
-        extreme_vals.(ext_fields{i}) = rel_endpoint(sw_idx(steps, i), :);
-        plot(mean(extreme_vals.(ext_fields{i})(:, 1)), mean(extreme_vals.(ext_fields{i})(:, 2)), 'o', 'linewidth', 3, 'color', 'r');
-    end
-    steplen = extreme_vals.back(:, 1)-extreme_vals.front(:, 1);
-    avlen = mean(steplen);
-    stepht = extreme_vals.hi(:, 2)-extreme_vals.lo(:, 2);
-    avht = mean(stepht);
-    
-    
     
     %save some stuff down here if it all looks good
     usr_in = input('Do you want to save file? (y/n) ', 's');
@@ -302,5 +324,7 @@ for filenum=[2:3]
     %standard deviation
     
 end
+
+err_trials
 
 
