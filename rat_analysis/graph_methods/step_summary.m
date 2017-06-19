@@ -8,10 +8,10 @@ clear all; close all;
 
 %set variables for each run
 
-pkdist = 140;
+pkdist = 70;
 err_trials = []; %rig this up for catching errored trials
 
-for filenum=[6 10 14 20 23 25 26]
+for filenum=[26]
     try
         if exist('filedate')
             clear('filedate', 'sw_idx', 'pk_positions', 'extreme_vals');
@@ -59,20 +59,23 @@ for filenum=[6 10 14 20 23 25 26]
         %this.
         f_vals = sort(pk_positions.f_locs(1:11));
         b_vals = sort(pk_positions.b_locs(1:11));
-%         if f_vals(1)>b_vals(1) %TODO: this is kind of janky
+        %if there are higher peaks for the swing than backswing of stance
+        if f_vals(1)>b_vals(1) && f_vals(2)>b_vals(2) %TODO: this is kind of janky
 %             B = [pk_positions.b_locs(1:12), pk_positions.b_pks(1:12)]; %makes a matrix
 %             [values, order] = sort(B(:,1));
 %             sortedB = B(order,:); 
-%
-%             b_vals = sort(pk_positions.b_locs(1:12));
-%             b_vals(1) = [];
-%         end
+
+            b_vals = sort(pk_positions.b_locs(12:22));
+            pk_positions.b_pks = pk_positions.b_pks(12:22); 
+            pk_positions.b_locs = pk_positions.b_locs(12:22); 
+            %b_vals(1) = [];
+        end
         %just use swing phase, and do the overlay+avg of hip, knee, ankle angles
         
         %TODO: SWITCH THIS BACK VERY IMPORTANT
         %TODO: FIGURE OUT WHY THIS NEEDS TO BE SWITCHED AND WHAT'S
         %HAPPENING
-        sw_idx = [b_vals(1:11) f_vals(1:11)];
+        sw_idx = [f_vals(1:11) b_vals(1:11)];
         
         %choose indices to exclude when determining high peaks - otherwise the back
         %swing of the foot gets included
@@ -123,8 +126,22 @@ for filenum=[6 10 14 20 23 25 26]
             %find the correct section of step
             %find the minimum value and index within that section
             %subplot(4, 4, fig_idx(i)); hold on;
-            pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2));
-            pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
+            disp(['Finding low peaks idx ' num2str(i)]); 
+            try
+                pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2));
+                pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
+            catch
+                %manually enter the correct val
+                disp('Possible values'); 
+                %TODO: DO A SORT HERE, THEN MANUALLY PICK THE CORRECT
+                %VALUE. MAYBE MOVE THIS EARLIER AND JUST DO IT IF THE AUTO
+                %OPTIONS DON'T LEAVE THEM FAIRLY EVENLY SPACED. YEAH. DO
+                %THAT.
+                input(['Correct index of peak #' num2str(i) ': ')
+                pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
+            end
+            %pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 2):sw_idx(i+1, 1), 2))
+            %pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 2):sw_idx(i+1, 2), 2))+sw_idx(i, 1)-1;
             
             %plot
             %plot(rel_endpoint(alt_l_locs(i), 1), rel_endpoint(alt_l_locs(i), 2), 'o', 'color', 'g', 'linewidth', 3);
@@ -136,9 +153,9 @@ for filenum=[6 10 14 20 23 25 26]
         % pk_positions.l_locs = pk_positions.l_locs + min(pk_positions.h_locs);
         
         if size(pk_positions.l_locs, 1)==10
-            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 0] [sort(pk_positions.l_locs(1:10)); 0]];
+            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 1] [sort(pk_positions.l_locs(1:10)); 1]];
         else
-            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 0] sort(pk_positions.l_locs(1:11))];
+            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 1] sort(pk_positions.l_locs(1:11))];
         end
         
         %plot the peaks chosen to check that correct ones were chosen
@@ -189,26 +206,6 @@ for filenum=[6 10 14 20 23 25 26]
         mn_endpt = [mean(upsamp(trace_x)); mean(upsamp(trace_y)); mean(upsamp(trace_z))];
         figure(1); subplot(4, 4, [3 4 7 8 11 12]); hold on;
         plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3, 'color', 'k');
-        
-        %
-        % figure; hold on;
-        % temp1 = upsamp(trace_x);
-        % temp2 = upsamp(trace_y);
-        % plot(temp1', temp2', '.-', 'color', 'b');
-        % plot(mean(temp1), mean(temp2), '.-', 'color', 'k', 'linewidth', 3);
-        % figure; hold on;
-        % plot(temp1');
-        % temp1 = temp1(:, 2:end);
-        % xvals = repmat(1:size(temp1, 2), size(temp1, 1), 1);
-        % plot(polyval(polyfit(xvals, temp1, 7), 1:size(temp1, 2)));
-        % temp2 = temp2(:, 2:end);
-        % figure;
-        % plot(polyval(polyfit(xvals, temp2, 7), 1:size(temp2, 2)));
-        % plot(polyval(polyfit(xvals, temp1, 7), 1:size(temp1, 2)), polyval(polyfit(xvals, temp2, 7), 1:size(temp2, 2)))
-        % %uhhh so mean doesn't really work
-        % %do best fit line for each of the sets of traces instead
-        %
-        
         
         %%%
         
