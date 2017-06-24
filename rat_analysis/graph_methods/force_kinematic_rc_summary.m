@@ -5,9 +5,9 @@
 clear all; close all;
 
 %set variables for each run
-filedate = '170503';
-startnum = 16;
-muscle = 'GS';
+filedate = '161201';
+startnum = 22;
+muscle = 'VL';
 
 %set paths
 path = '/Users/mariajantz/Documents/Work/data/';
@@ -168,7 +168,7 @@ if usr_in == 'y'
     save([path '../figures/summary/force_kinematic_rc/' muscle '_' filedate '.mat'], ...
         'stim_vals', 'ratMks', 'ratAng', 'vfdata', 't', 't2', 't3', 'mnacc', 'locs', ...
         'fdata', 'allmag', 'allang', 'allang2', 'mnang1', 'mnang2', 'force_mnmag');
-    figure();
+    figure(1);
     figpath = '/Users/mariajantz/Documents/Work/figures/summary/force_kinematic_rc/';
     savefig([figpath filedate '_' muscle]);
 end

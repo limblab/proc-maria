@@ -8,16 +8,17 @@ clear all; close all;
 
 %set variables for each run
 
-pkdist = 70;
+pkdist = 160;
 err_trials = []; %rig this up for catching errored trials
+numsteps = 11; 
 
-for filenum=[26]
+for filenum=[1]
     try
         if exist('filedate')
             clear('filedate', 'sw_idx', 'pk_positions', 'extreme_vals');
             close all;
         end
-        filedate = '161006';
+        filedate = '160908';
         %set paths
         path = '/Users/mariajantz/Documents/Work/data/';
         kin_path = [path 'kinematics/processed/' filedate '_' num2str(filenum, '%02d') '_rat.mat'];
@@ -42,9 +43,9 @@ for filenum=[26]
         
         pk_positions = struct();
         figure(2); subplot(2, 2, 1); hold on;
-        findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist)
+        findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', 10)
         title('Back peaks');
-        [pk_positions.b_pks, pk_positions.b_locs] = findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist);
+        [pk_positions.b_pks, pk_positions.b_locs] = findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', 40);
         inv_arr = max(rel_endpoint(1:finpt, 1))*1.01 - rel_endpoint(1:finpt, 1);
         subplot(2, 2, 2); findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1)
         title('Forward peaks');
@@ -57,17 +58,17 @@ for filenum=[26]
         %%%%%%
         %TODO: check that front peak #1 happens before back peak #1, deal with
         %this.
-        f_vals = sort(pk_positions.f_locs(1:11));
-        b_vals = sort(pk_positions.b_locs(1:11));
+        f_vals = sort(pk_positions.f_locs(1:numsteps));
+        b_vals = sort(pk_positions.b_locs(1:numsteps));
         %if there are higher peaks for the swing than backswing of stance
         if f_vals(1)>b_vals(1) && f_vals(2)>b_vals(2) %TODO: this is kind of janky
 %             B = [pk_positions.b_locs(1:12), pk_positions.b_pks(1:12)]; %makes a matrix
 %             [values, order] = sort(B(:,1));
 %             sortedB = B(order,:); 
-
+            %TODO: currently hard coded, switch to numsteps
             b_vals = sort(pk_positions.b_locs(12:22));
-            pk_positions.b_pks = pk_positions.b_pks(12:22); 
-            pk_positions.b_locs = pk_positions.b_locs(12:22); 
+            pk_positions.b_pks = [pk_positions.b_pks(12:22); pk_positions.b_pks(1:11)]; 
+            pk_positions.b_locs = [pk_positions.b_locs(12:22); pk_positions.b_locs(1:11)]; 
             %b_vals(1) = [];
         end
         %just use swing phase, and do the overlay+avg of hip, knee, ankle angles
@@ -127,19 +128,20 @@ for filenum=[26]
             %find the minimum value and index within that section
             %subplot(4, 4, fig_idx(i)); hold on;
             disp(['Finding low peaks idx ' num2str(i)]); 
-            try
+           
                 pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2));
                 pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
-            catch
-                %manually enter the correct val
-                disp('Possible values'); 
-                %TODO: DO A SORT HERE, THEN MANUALLY PICK THE CORRECT
-                %VALUE. MAYBE MOVE THIS EARLIER AND JUST DO IT IF THE AUTO
-                %OPTIONS DON'T LEAVE THEM FAIRLY EVENLY SPACED. YEAH. DO
-                %THAT.
-                input(['Correct index of peak #' num2str(i) ': ')
-                pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
-            end
+%             
+%                 %manually enter the correct val
+%                 disp('Possible values'); 
+%                 %TODO: DO A SORT HERE, THEN MANUALLY PICK THE CORRECT
+%                 %VALUE. MAYBE MOVE THIS EARLIER AND JUST DO IT IF THE AUTO
+%                 %OPTIONS DON'T LEAVE THEM FAIRLY EVENLY SPACED. YEAH. DO
+%                 %THAT.
+%                 disp(mat2str(sort(pk_positions.l_locs))); 
+%                 pk_positions.l_locs(i) = input(['Correct index of peak #' num2str(i) ': ']);
+%                 pk_positions.l_pks(i) = find(pk_positions.l_locs(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
+            
             %pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 2):sw_idx(i+1, 1), 2))
             %pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 2):sw_idx(i+1, 2), 2))+sw_idx(i, 1)-1;
             
