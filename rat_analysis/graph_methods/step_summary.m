@@ -8,17 +8,22 @@ clear all; close all;
 
 %set variables for each run
 
-pkdist = 160;
+pkdist = 100;
+pkwid = 10; 
 err_trials = []; %rig this up for catching errored trials
 numsteps = 11; 
 
-for filenum=[1]
+filedates = {'160908', '161006', '161101', '161116', '170406'};
+filenums = [1, 6, 2, 9, 115];
+
+for f=5
+    filenum = filenums(f);
     try
         if exist('filedate')
             clear('filedate', 'sw_idx', 'pk_positions', 'extreme_vals');
             close all;
         end
-        filedate = '160908';
+        filedate = filedates{f};
         %set paths
         path = '/Users/mariajantz/Documents/Work/data/';
         kin_path = [path 'kinematics/processed/' filedate '_' num2str(filenum, '%02d') '_rat.mat'];
@@ -30,7 +35,7 @@ for filenum=[1]
         %next draw all traces for a trial, relative to the hip marker at zero
         figure(1); subplot(4, 4, [3 4 7 8 11 12]); hold on;
         rel_endpoint = rat.toe-rat.hip_bottom;
-        finpt = min(4000, size(rel_endpoint, 1)); 
+        finpt = min(5000, size(rel_endpoint, 1)); 
         plot(rel_endpoint(1:finpt, 1), rel_endpoint(1:finpt, 2))
         title([filedate ' Trial ' num2str(filenum)]);
         
@@ -43,9 +48,9 @@ for filenum=[1]
         
         pk_positions = struct();
         figure(2); subplot(2, 2, 1); hold on;
-        findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', 10)
+        findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', pkwid)
         title('Back peaks');
-        [pk_positions.b_pks, pk_positions.b_locs] = findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', 40);
+        [pk_positions.b_pks, pk_positions.b_locs] = findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', pkwid);
         inv_arr = max(rel_endpoint(1:finpt, 1))*1.01 - rel_endpoint(1:finpt, 1);
         subplot(2, 2, 2); findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1)
         title('Forward peaks');
@@ -76,7 +81,7 @@ for filenum=[1]
         %TODO: SWITCH THIS BACK VERY IMPORTANT
         %TODO: FIGURE OUT WHY THIS NEEDS TO BE SWITCHED AND WHAT'S
         %HAPPENING
-        sw_idx = [f_vals(1:11) b_vals(1:11)];
+        sw_idx = [f_vals(1:numsteps) b_vals(1:numsteps)];
         
         %choose indices to exclude when determining high peaks - otherwise the back
         %swing of the foot gets included
@@ -87,7 +92,7 @@ for filenum=[1]
         h_arr = {};
         k_arr = {};
         a_arr = {};
-        for i=1:10
+        for i=1:numsteps-1
             subplot(1, 3, 1); hold on;
             plot(rat.angles.hip(sw_idx(i, 1):sw_idx(i+1, 1)));
             h_arr{i} = rat.angles.hip(sw_idx(i, 1):sw_idx(i+1, 1));
@@ -210,6 +215,15 @@ for filenum=[1]
         plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3, 'color', 'k');
         
         %%%
+        figure(4); hold on; %step plotted on equal axes
+        plot(rel_endpoint(1:finpt, 1), rel_endpoint(1:finpt, 2)); 
+        plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3, 'color', 'k');
+        title([filedate ' Trial ' num2str(filenum)]);
+        ylim([-95 0]);
+        xlim([-60 70]); 
+        set(gca, 'FontSize', 14); 
+        set(gca, 'TickDir', 'out');
+        box off; 
         
         %calculate avg high and low points, and avg front and back points
         extreme_vals = struct();
@@ -224,7 +238,7 @@ for filenum=[1]
         stepht = extreme_vals.hi(:, 2)-extreme_vals.lo(:, 2);
         avht = mean(stepht);
         
-    catch
+    catch ME
         err_trials(end+1) = filenum;
         disp(['skipping trial ' num2str(filenum)]);
         continue

@@ -5,8 +5,8 @@
 clear all; close all;
 
 %set variables for each run
-filedate = '161201';
-startnum = 22;
+filedate = '170406';
+startnum = 37;
 muscle = 'VL';
 
 %set paths
@@ -14,6 +14,8 @@ path = '/Users/mariajantz/Documents/Work/data/';
 kin_path = [path 'kinematics/processed/'];
 force_path = [path 'forces/' filedate '_iso/' muscle '_force'];
 
+
+%% force
 %load and filter force data
 load(force_path);
 %access the stimulation values
@@ -61,7 +63,7 @@ plot(stim_vals, cell2mat(cellfun(@(x) mean(x(mnrange, 3)), fdata, 'UniformOutput
 fig_prefs(gca, stim_vals);
 legend({'x', 'y', 'z'});
 
-
+%% kinematics
 %kinematic values: find peaks
 %filter the vicon data and calculate acceleration - as many files as there
 %are in the list of currents
@@ -78,6 +80,15 @@ traceacc = {};
 locs = {};
 vfdata = {};
 for i=1:length(stim_vals)
+    %make a figure to do families of:
+    %raw force trace (TODO: maybe move this up)
+    %raw kinematic trace (x, y)
+    %filtered kinematic trace (x, y)
+    %velocity trace (mag)
+    %velocity trace, filtered
+    %accel trace
+    %accel trace, filtered
+    
     %read in the kinematics file
     load([kin_path filedate '_' num2str(i+startnum-1, '%02d') '_rat.mat']);
     
@@ -95,10 +106,36 @@ for i=1:length(stim_vals)
     %figure(2); plot(data.x(:, 11));
     
     [locs{i}, traceacc{i}, mnacc(i), pkvels(i), vfdata{i}] = accfilt2(data, cutoff);
+    %find peak accel and average with one point on either side
+    apk_arr = vfdata{i}.mag_acc((locs{i}(end)-5):(locs{i}(end)+2)); 
+    [apk, aidx] = max(apk_arr); 
+    if length(apk)>1
+        disp(['apks has these values for val ' num2str(stim_vals(i))]); 
+        apk
+    end
+    pkacc(i) = mean(apk_arr(aidx-1:aidx+1)); %TODO: this is a shortcut based on issue with low values
+    %save figure showing velocity, accel for this trace
+    if ~exist([path '../figures/summary/force_kinematic_rc/' filedate '/'])
+        mkdir([path '../figures/summary/force_kinematic_rc/' filedate '/'])
+    end
+    fname = [muscle num2str(stim_vals(i))]; 
+    fname(fname=='.') = '-'; 
+    savefig([path '../figures/summary/force_kinematic_rc/' filedate '/' fname]); 
+    close([201 70]); 
 end
 
 %TODO: update the accfilt function to return the individual
 %xyz vals, not just the magnitude. Also, joint angles.
+
+%deal with pkvel - check correlation
+%calculate and check whether pkacc correlates
+figure(2); title('Peaks'); hold on;
+%plot(stim_vals, force_mnmag/max(force_mnmag), '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, pkvels/max(pkvels), '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, pkacc/max(pkacc), '-d', 'LineWidth', 3, 'MarkerSize', 5);
+legend({'force', ['pk vel ' num2str(round(corr2(pkvels, force_mnmag), 3))],...
+    ['pk acc ' num2str(round(corr2(pkacc, force_mnmag), 3))]}, 'Location', 'northwest'); 
+fig_prefs(gca, stim_vals); 
 
 %calculate traces
 t = cell2mat(cellfun(@(x) mean(x), traceacc, 'UniformOutput', 0));

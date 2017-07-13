@@ -101,7 +101,8 @@ function [fhandle, footStrike, footOff] = saveGaitMovie( data, freq, overlay, fi
     if overlay
         %get colors (this is a bit sloppy right now)
         %colors = [85 163 98; 11 62 25];
-        colors = [132 242 144; 11 62 25];%[255 99 91; 95 199 232]; %[217 24 21; 0,32,184]; 
+        %colors = [132 242 144; 11 62 25];%[255 99 91; 95 199 232]; %[217 24 21; 0,32,184]; 
+        colors = [170, 203, 255; 0, 38, 99]; %new color, solid
         ranges = [0 nPt]; 
         map = interp1(ranges/nPt,colors,linspace(0,1,nPt))/255; 
     end
