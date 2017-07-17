@@ -5,9 +5,9 @@
 clear all; close all;
 
 %set variables for each run
-filedate = '170406';
-startnum = 37;
-muscle = 'VL';
+filedate = '170126';
+startnum = 1;
+muscle = 'GS';
 
 %set paths
 path = '/Users/mariajantz/Documents/Work/data/';
@@ -34,7 +34,7 @@ figure(1);
 set(gcf, 'Position', [100, 155, 1200, 860]);
 subplot(3, 3, 1);
 
-mnrange = 2350:2800;
+mnrange = 2500:2700; %formerly 2350:2800;
 
 mnang1 = mean(allang(:, mnrange)');
 mnang2 = mean(allang2(:, mnrange)');
@@ -80,15 +80,6 @@ traceacc = {};
 locs = {};
 vfdata = {};
 for i=1:length(stim_vals)
-    %make a figure to do families of:
-    %raw force trace (TODO: maybe move this up)
-    %raw kinematic trace (x, y)
-    %filtered kinematic trace (x, y)
-    %velocity trace (mag)
-    %velocity trace, filtered
-    %accel trace
-    %accel trace, filtered
-    
     %read in the kinematics file
     load([kin_path filedate '_' num2str(i+startnum-1, '%02d') '_rat.mat']);
     
@@ -97,31 +88,42 @@ for i=1:length(stim_vals)
     %data is unfiltered version
     %most peaks occur between point 220 and 240 in the data so only look at that
     %section
-    data.x = cell2mat(cellfun(@(x) rat.(x)(200:260, 1), ratMks, 'UniformOutput', 0));
-    data.y = cell2mat(cellfun(@(x) rat.(x)(200:260, 2), ratMks, 'UniformOutput', 0));
-    data.z = cell2mat(cellfun(@(x) rat.(x)(200:260, 3), ratMks, 'UniformOutput', 0));
+%     data.x = cell2mat(cellfun(@(x) rat.(x)(200:260, 1), ratMks, 'UniformOutput', 0));
+%     data.y = cell2mat(cellfun(@(x) rat.(x)(200:260, 2), ratMks, 'UniformOutput', 0));
+%     data.z = cell2mat(cellfun(@(x) rat.(x)(200:260, 3), ratMks, 'UniformOutput', 0));
+    data.x = cell2mat(cellfun(@(x) rat.(x)(:, 1), ratMks, 'UniformOutput', 0));
+    data.y = cell2mat(cellfun(@(x) rat.(x)(:, 2), ratMks, 'UniformOutput', 0));
+    data.z = cell2mat(cellfun(@(x) rat.(x)(:, 3), ratMks, 'UniformOutput', 0));
     %add the angles
     data.angles = cell2mat(cellfun(@(x) rat.angles.(x)(200:260, 1), ratAng, 'UniformOutput', 0));
     
     %figure(2); plot(data.x(:, 11));
+    %choose range in which stimulation occurs
+    checkrange = 225:233;
+    plotrange = 210:240;
     
-    [locs{i}, traceacc{i}, mnacc(i), pkvels(i), vfdata{i}] = accfilt2(data, cutoff);
+    [locs{i}, traceacc{i}, mnacc(i), pkvels(i), vfdata{i}] = accfilt2(data, cutoff, checkrange, plotrange);
+    
+    %figures!
+    plot_families(fdata{i}, vfdata{i}); 
+    
+    
     %find peak accel and average with one point on either side
-    apk_arr = vfdata{i}.mag_acc((locs{i}(end)-5):(locs{i}(end)+2)); 
-    [apk, aidx] = max(apk_arr); 
-    if length(apk)>1
-        disp(['apks has these values for val ' num2str(stim_vals(i))]); 
-        apk
-    end
+    apk_arr = vfdata{i}.mag_acc((locs{i}(end)-5):(locs{i}(end)+1));
+    [apk, aidx] = max(apk_arr);
+    %     if length(apk)>1
+    %         disp(['apks has these values for val ' num2str(stim_vals(i))]);
+    %         apk
+    %     end
     pkacc(i) = mean(apk_arr(aidx-1:aidx+1)); %TODO: this is a shortcut based on issue with low values
     %save figure showing velocity, accel for this trace
     if ~exist([path '../figures/summary/force_kinematic_rc/' filedate '/'])
         mkdir([path '../figures/summary/force_kinematic_rc/' filedate '/'])
     end
-    fname = [muscle num2str(stim_vals(i))]; 
-    fname(fname=='.') = '-'; 
-    savefig([path '../figures/summary/force_kinematic_rc/' filedate '/' fname]); 
-    close([201 70]); 
+    fname = [muscle num2str(stim_vals(i))];
+    fname(fname=='.') = '-';
+    savefig([path '../figures/summary/force_kinematic_rc/' filedate '/' fname]);
+    close([201 70]);
 end
 
 %TODO: update the accfilt function to return the individual
@@ -134,8 +136,8 @@ figure(2); title('Peaks'); hold on;
 plot(stim_vals, pkvels/max(pkvels), '-d', 'LineWidth', 3, 'MarkerSize', 5);
 plot(stim_vals, pkacc/max(pkacc), '-d', 'LineWidth', 3, 'MarkerSize', 5);
 legend({'force', ['pk vel ' num2str(round(corr2(pkvels, force_mnmag), 3))],...
-    ['pk acc ' num2str(round(corr2(pkacc, force_mnmag), 3))]}, 'Location', 'northwest'); 
-fig_prefs(gca, stim_vals); 
+    ['pk acc ' num2str(round(corr2(pkacc, force_mnmag), 3))]}, 'Location', 'northwest');
+fig_prefs(gca, stim_vals);
 
 %calculate traces
 t = cell2mat(cellfun(@(x) mean(x), traceacc, 'UniformOutput', 0));

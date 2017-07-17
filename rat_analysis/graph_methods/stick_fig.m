@@ -1,7 +1,7 @@
 clear all;
 
-filedates = {'161006', '161006','161006', '161116', '161116', '161116', '170406', '170406', '170406'};
-filenums = [11, 15, 16, 9:11, 129:131];
+filedates = {'161006'};
+filenums = [11];
 
 %load the summary info
 savepath = '/Users/mariajantz/Documents/Work/data/kinematics/processed_summary/';

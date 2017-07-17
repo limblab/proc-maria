@@ -3,9 +3,9 @@ clear all; close all;
 err_trials = []; %rig this up for removing steps from set
 numsteps = 11;
 
-filedate_val = '170406';
-trials = [114 130:132];
-ax_check = 2; %1 for length (x), 2 for height (y); 
+filedate_val = '170713';
+trials = [108:114];
+ax_check = 1; %1 for length (x), 2 for height (y); 
 sumpath = '/Users/mariajantz/Documents/Work/data/kinematics/processed_summary/summary_steps.mat';
 load(sumpath);
 

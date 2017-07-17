@@ -109,7 +109,7 @@ function [fhandle, footStrike, footOff] = saveGaitMovie( data, freq, overlay, fi
     
     hold on; 
     while fig.UserData.i<=nPt %this loop is where the actual movie gets played     
-        
+        %pause(.1); 
         if fig.UserData.i<1
             fig.UserData.i = 1;
             k = 1;

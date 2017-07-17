@@ -11,19 +11,21 @@ clear all; close all;
 pkdist = 100;
 pkwid = 10; 
 err_trials = []; %rig this up for catching errored trials
-numsteps = 11; 
+numsteps = 10; 
 
-filedates = {'160908', '161006', '161101', '161116', '170406'};
-filenums = [1, 6, 2, 9, 115];
+%filedates = {'160908', '161006', '161101', '161116', '170406'};
+filedates = '170713';
+filenums = [41:48];
 
-for f=5
+for f=1:length(filenums)
     filenum = filenums(f);
     try
         if exist('filedate')
             clear('filedate', 'sw_idx', 'pk_positions', 'extreme_vals');
             close all;
         end
-        filedate = filedates{f};
+        %filedate = filedates{f};
+        filedate = filedates; 
         %set paths
         path = '/Users/mariajantz/Documents/Work/data/';
         kin_path = [path 'kinematics/processed/' filedate '_' num2str(filenum, '%02d') '_rat.mat'];
@@ -66,16 +68,16 @@ for f=5
         f_vals = sort(pk_positions.f_locs(1:numsteps));
         b_vals = sort(pk_positions.b_locs(1:numsteps));
         %if there are higher peaks for the swing than backswing of stance
-        if f_vals(1)>b_vals(1) && f_vals(2)>b_vals(2) %TODO: this is kind of janky
-%             B = [pk_positions.b_locs(1:12), pk_positions.b_pks(1:12)]; %makes a matrix
-%             [values, order] = sort(B(:,1));
-%             sortedB = B(order,:); 
-            %TODO: currently hard coded, switch to numsteps
-            b_vals = sort(pk_positions.b_locs(12:22));
-            pk_positions.b_pks = [pk_positions.b_pks(12:22); pk_positions.b_pks(1:11)]; 
-            pk_positions.b_locs = [pk_positions.b_locs(12:22); pk_positions.b_locs(1:11)]; 
-            %b_vals(1) = [];
-        end
+%         if f_vals(1)>b_vals(1) && f_vals(2)>b_vals(2) %TODO: this is kind of janky
+% %             B = [pk_positions.b_locs(1:12), pk_positions.b_pks(1:12)]; %makes a matrix
+% %             [values, order] = sort(B(:,1));
+% %             sortedB = B(order,:); 
+%             %TODO: currently hard coded, switch to numsteps
+%             b_vals = sort(pk_positions.b_locs(12:22));
+%             pk_positions.b_pks = [pk_positions.b_pks(12:22); pk_positions.b_pks(1:11)]; 
+%             pk_positions.b_locs = [pk_positions.b_locs(12:22); pk_positions.b_locs(1:11)]; 
+%             %b_vals(1) = [];
+%         end
         %just use swing phase, and do the overlay+avg of hip, knee, ankle angles
         
         %TODO: SWITCH THIS BACK VERY IMPORTANT
@@ -159,10 +161,10 @@ for f=5
         % pk_positions.l_pks = rel_endpoint(pk_positions.l_locs, 2);
         % pk_positions.l_locs = pk_positions.l_locs + min(pk_positions.h_locs);
         
-        if size(pk_positions.l_locs, 1)==10
-            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 1] [sort(pk_positions.l_locs(1:10)); 1]];
+        if size(pk_positions.l_locs, 1)==numsteps-1
+            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:numsteps-1)); 1] [sort(pk_positions.l_locs(1:numsteps-1)); 1]];
         else
-            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:10)); 1] sort(pk_positions.l_locs(1:11))];
+            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:numsteps-1)); 1] sort(pk_positions.l_locs(1:numsteps))];
         end
         
         %plot the peaks chosen to check that correct ones were chosen
@@ -171,9 +173,9 @@ for f=5
         figure(2); subplot(2, 2, 2); hold on;
         plot(pk_positions.f_locs(1:length(sw_idx(:, 1))), f_pks(1:length(sw_idx(:, 1))), 'o', 'color', 'r', 'linewidth', 3);
         figure(2); subplot(2, 2, 3); hold on;
-        plot(pk_positions.h_locs(1:10), pk_positions.h_pks(1:10), 'o', 'color', 'r', 'linewidth', 3);
+        plot(pk_positions.h_locs(1:numsteps-1), pk_positions.h_pks(1:numsteps-1), 'o', 'color', 'r', 'linewidth', 3);
         figure(2); subplot(2, 2, 4); hold on;
-        plot(pk_positions.l_locs(1:10), inv_arr(pk_positions.l_locs(1:10)), 'o', 'color', 'r', 'linewidth', 3);
+        plot(pk_positions.l_locs(1:numsteps-1), inv_arr(pk_positions.l_locs(1:numsteps-1)), 'o', 'color', 'r', 'linewidth', 3);
         fig = gcf;
         fig.Position = [100 155 1000 800];
         
@@ -306,6 +308,8 @@ for f=5
                     savefig([figpath filedate_temp '_' num2str(filenum_temp) '_path']);
                     figure(3); %make sure current figure is the one to save
                     savefig([figpath filedate_temp '_' num2str(filenum_temp) '_angles']);
+                    figure(4); %make sure current figure is the one to save
+                    savefig([figpath filedate_temp '_' num2str(filenum_temp) '_equalax']);
                 end
                 
             elseif cont_write == 'y'
@@ -319,6 +323,8 @@ for f=5
                 savefig([figpath filedate_temp '_' num2str(filenum_temp) '_path']);
                 figure(3); %make sure current figure is the one to save
                 savefig([figpath filedate_temp '_' num2str(filenum_temp) '_angles']);
+                figure(4); %make sure current figure is the one to save
+                savefig([figpath filedate_temp '_' num2str(filenum_temp) '_equalax']);
             end
         else
             %convert everything to cells and then save.
@@ -331,6 +337,8 @@ for f=5
             savefig([figpath filedate_temp '_' num2str(filenum_temp) '_path']);
             figure(3); %make sure current figure is the one to save
             savefig([figpath filedate_temp '_' num2str(filenum_temp) '_angles']);
+            figure(4); %make sure current figure is the one to save
+            savefig([figpath filedate_temp '_' num2str(filenum_temp) '_equalax']);
         end
     end
     %save fr, bk, hi, lo step values so I can make summary figs with mean and
