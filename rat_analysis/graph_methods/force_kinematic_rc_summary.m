@@ -77,66 +77,74 @@ cutoff=50;
 mnacc = 1:length(stim_vals);
 pkvels = 1:length(stim_vals);
 traceacc = {};
-locs = {};
 vfdata = {};
 for i=1:length(stim_vals)
     %read in the kinematics file
     load([kin_path filedate '_' num2str(i+startnum-1, '%02d') '_rat.mat']);
     
     %that returns a struct named "rat"
-    %import every marker on the rat (oh boy)
-    %data is unfiltered version
-    %most peaks occur between point 220 and 240 in the data so only look at that
-    %section
-%     data.x = cell2mat(cellfun(@(x) rat.(x)(200:260, 1), ratMks, 'UniformOutput', 0));
-%     data.y = cell2mat(cellfun(@(x) rat.(x)(200:260, 2), ratMks, 'UniformOutput', 0));
-%     data.z = cell2mat(cellfun(@(x) rat.(x)(200:260, 3), ratMks, 'UniformOutput', 0));
+    %most peaks occur between point 220 and 240
     data.x = cell2mat(cellfun(@(x) rat.(x)(:, 1), ratMks, 'UniformOutput', 0));
     data.y = cell2mat(cellfun(@(x) rat.(x)(:, 2), ratMks, 'UniformOutput', 0));
     data.z = cell2mat(cellfun(@(x) rat.(x)(:, 3), ratMks, 'UniformOutput', 0));
     %add the angles
-    data.angles = cell2mat(cellfun(@(x) rat.angles.(x)(200:260, 1), ratAng, 'UniformOutput', 0));
+    data.angles = cell2mat(cellfun(@(x) rat.angles.(x)(:, 1), ratAng, 'UniformOutput', 0));
     
     %figure(2); plot(data.x(:, 11));
     %choose range in which stimulation occurs
     checkrange = 225:233;
     plotrange = 210:240;
     
-    [locs{i}, traceacc{i}, mnacc(i), pkvels(i), vfdata{i}] = accfilt2(data, cutoff, checkrange, plotrange);
+    [traceacc{i}, mnacc(i), pkvels(i), vfdata{i}] = accfilt2(data, cutoff, checkrange, plotrange);
     
-    %figures!
-    plot_families(fdata{i}, vfdata{i}); 
+    %TODO: deal with this
+    %v_idx(i, :) = (fdata.locs.vpk-3):fdata.locs.vpk;
     
+    %figures! families
+    %colors = [170, 203, 255; 0, 38, 99];
+    colors = [255 192 0; 255 58 25];
+    colors2 = [255 58 25; 18 75 178]; %202, 7, 62 red?
+    nPt = size(stim_vals,2);
+    %ranges = [0 nPt];
+    save_folder = [];
+    map = [interp1([0 1],colors,linspace(0,1,round(nPt/2)))/255; ...
+        interp1([0 1],colors2,linspace(1/round(nPt/2),1,round(nPt/2)-1))/255;];
+    plot_color = map(i, :);
+    plot_families(fdata{i}, vfdata{i}, plot_color, save_folder);
     
-    %find peak accel and average with one point on either side
-    apk_arr = vfdata{i}.mag_acc((locs{i}(end)-5):(locs{i}(end)+1));
-    [apk, aidx] = max(apk_arr);
-    %     if length(apk)>1
-    %         disp(['apks has these values for val ' num2str(stim_vals(i))]);
-    %         apk
-    %     end
-    pkacc(i) = mean(apk_arr(aidx-1:aidx+1)); %TODO: this is a shortcut based on issue with low values
+    %TODO: deal with locs values that don't match the filtered version
+    %TODO: do both filtered and unfiltered version
+    pkacc(i) = vfdata{i}.pks.aval;
+    pkaccmn(i) = vfdata{i}.pks.amean;
     %save figure showing velocity, accel for this trace
-    if ~exist([path '../figures/summary/force_kinematic_rc/' filedate '/'])
-        mkdir([path '../figures/summary/force_kinematic_rc/' filedate '/'])
+    if ~exist([path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces/'])
+        mkdir([path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces/']);
     end
-    fname = [muscle num2str(stim_vals(i))];
+    fname = [muscle num2str(stim_vals(i), '%2d')];
     fname(fname=='.') = '-';
-    savefig([path '../figures/summary/force_kinematic_rc/' filedate '/' fname]);
-    close([201 70]);
+    savefig([path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces/' fname]); 
+    if i~=length(stim_vals)
+        close([70 77 78]);
+    end
+    close(201); 
 end
+
+%do example of peak velocity and acceleration calculation
+
 
 %TODO: update the accfilt function to return the individual
 %xyz vals, not just the magnitude. Also, joint angles.
 
 %deal with pkvel - check correlation
 %calculate and check whether pkacc correlates
-figure(2); title('Peaks'); hold on;
-%plot(stim_vals, force_mnmag/max(force_mnmag), '-d', 'LineWidth', 3, 'MarkerSize', 5);
-plot(stim_vals, pkvels/max(pkvels), '-d', 'LineWidth', 3, 'MarkerSize', 5);
-plot(stim_vals, pkacc/max(pkacc), '-d', 'LineWidth', 3, 'MarkerSize', 5);
+figure(2); title('Normalized Peaks'); hold on;
+plot(stim_vals, (force_mnmag - min(force_mnmag))/(max(force_mnmag)- min(force_mnmag)), '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, (pkvels - min(pkvels))/(max(pkvels)- min(pkvels)), '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, (pkacc - min(pkacc))/(max(pkacc)- min(pkacc)), '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, (pkaccmn - min(pkaccmn))/(max(pkaccmn)- min(pkaccmn)), '-d', 'LineWidth', 3, 'MarkerSize', 5);
 legend({'force', ['pk vel ' num2str(round(corr2(pkvels, force_mnmag), 3))],...
-    ['pk acc ' num2str(round(corr2(pkacc, force_mnmag), 3))]}, 'Location', 'northwest');
+    ['pk acc ' num2str(round(corr2(pkacc, force_mnmag), 3))], ...
+    ['mean acc ' num2str(round(corr2(pkaccmn, force_mnmag), 3))]}, 'Location', 'northwest');
 fig_prefs(gca, stim_vals);
 
 %calculate traces
@@ -150,14 +158,14 @@ title('Accel Trace');
 fig_prefs(gca, stim_vals);
 
 %plot joint angle accel values
-%take the locs variable, then get and filter the joint angle
+%take the vfdata.loc variable, then get and filter the joint angle
 %acceleration at all of those points
 
 %get angles from vfdata arrays, use those values at the locs values to
 %calculate mean angles (say 3 points before?)
 ang_mean = zeros(length(stim_vals), 4);
 for i=1:length(vfdata)
-    A = vfdata{i}.angles.ddu(locs{i}, :);
+    A = vfdata{i}.angles.ddu(vfdata{i}.pks.vloc, :);
     disp(A);
     A(any(isnan(A), 2),:)=[];
     ang_mean(i, :) = mean(A);
@@ -171,7 +179,7 @@ legend(ratAng);
 %endpoint trace XYZ vals
 tr_mean = zeros(length(stim_vals), 3);
 for i=1:length(vfdata)
-    A = [vfdata{i}.x.ddu(locs{i}, 11) vfdata{i}.y.ddu(locs{i}, 11) vfdata{i}.z.ddu(locs{i}, 11)];
+    A = [vfdata{i}.x.ddu(v_idx(i), 11) vfdata{i}.y.ddu(v_idx(i), 11) vfdata{i}.z.ddu(v_idx(i), 11)];
     disp(A);
     A(any(isnan(A), 2),:)=[];
     tr_mean(i, :) = mean(A);
@@ -200,15 +208,23 @@ legend(leg_info);
 
 %save vals calculated, save peak locations in the data file? or in the
 %filtered data file
-%stim_vals, ratMks, ratAng, kinematics - vfdata, t, t2, t3, mnacc, locs; forces - fdata,
+%stim_vals, ratMks, ratAng, kinematics - vfdata, t, t2, t3, mnacc, vfdata.loc; forces - fdata,
 %allmag, allang, allang2, mnang1, mnang2, force_mnmag
 usr_in = input('Do you want to save file? (y/n) ', 's');
 if usr_in == 'y'
     save([path '../figures/summary/force_kinematic_rc/' muscle '_' filedate '.mat'], ...
-        'stim_vals', 'ratMks', 'ratAng', 'vfdata', 't', 't2', 't3', 'mnacc', 'locs', ...
+        'stim_vals', 'ratMks', 'ratAng', 'vfdata', 't', 't2', 't3', 'mnacc', ...
         'fdata', 'allmag', 'allang', 'allang2', 'mnang1', 'mnang2', 'force_mnmag');
-    figure(1);
-    figpath = '/Users/mariajantz/Documents/Work/figures/summary/force_kinematic_rc/';
-    savefig([figpath filedate '_' muscle]);
+    %savefig([figpath filedate '_' muscle]);
+
+figpath = ['/Users/mariajantz/Documents/Work/figures/summary/force_kinematic_rc/' filedate '/' muscle '/'];
+if ~exist(figpath)
+    mkdir(figpath);
+end
+%cycle through all the figures
+allfigs = get(0, 'children'); 
+for f = 1:length(allfigs)
+    savefig(allfigs(f), [figpath allfigs(f).Name]); 
+end
 end
 
