@@ -1,6 +1,6 @@
 clear all; close all;
 %define necessary import variables
-filedate = '170713';
+filedate = '170715';
 filenum = [116 119, 120, 121];
 sample_freq = 100; %give this value in Hz
 filepath = '/Users/mariajantz/Documents/Work/data/kinematics/processed/';

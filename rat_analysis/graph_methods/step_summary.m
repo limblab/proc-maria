@@ -8,14 +8,16 @@ clear all; close all;
 
 %set variables for each run
 
-pkdist = 100;
+pkdist = 80;
 pkwid = 10; 
 err_trials = []; %rig this up for catching errored trials
 numsteps = 10; 
 
 %filedates = {'160908', '161006', '161101', '161116', '170406'};
-filedates = '170713';
-filenums = [41:48];
+filedates = '170715';
+%filenums = [41:166];
+filenums = [44:49 60 66 68 71:73 81 82 84:87 89 91 104 106 112 117 119 ...
+    131 143 144 153 155:160 162:166];
 
 for f=1:length(filenums)
     filenum = filenums(f);
@@ -161,11 +163,28 @@ for f=1:length(filenums)
         % pk_positions.l_pks = rel_endpoint(pk_positions.l_locs, 2);
         % pk_positions.l_locs = pk_positions.l_locs + min(pk_positions.h_locs);
         
-        if size(pk_positions.l_locs, 1)==numsteps-1
-            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:numsteps-1)); 1] [sort(pk_positions.l_locs(1:numsteps-1)); 1]];
+        %
+        if size(pk_positions.h_locs, 1)>=numsteps-1
+            temph = sort(pk_positions.h_locs(1:numsteps-1));
         else
-            sw_idx(:, 3:4) = [[sort(pk_positions.h_locs(1:numsteps-1)); 1] sort(pk_positions.l_locs(1:numsteps))];
+            temph = sort(pk_positions.h_locs); 
         end
+        %place pk positions at correct locations between loops
+        j = 1; 
+        sw_idx(:, 3) = ones(numsteps, 1);
+        for i=1:numsteps-1
+            if ismember(temph(j), sw_idx(i, 2):sw_idx(i+1, 1))
+                sw_idx(i, 3) = temph(j); 
+                j = j+1; 
+            end 
+        end
+        if size(pk_positions.l_locs, 1)==numsteps-1
+            sw_idx(:, 4) = [sort(pk_positions.l_locs(1:numsteps-1)); 1];
+        else 
+            sw_idx(:, 4) = sort(pk_positions.l_locs(1:numsteps));
+        end
+        
+        %
         
         %plot the peaks chosen to check that correct ones were chosen
         figure(2); subplot(2, 2, 1); hold on;
@@ -173,7 +192,11 @@ for f=1:length(filenums)
         figure(2); subplot(2, 2, 2); hold on;
         plot(pk_positions.f_locs(1:length(sw_idx(:, 1))), f_pks(1:length(sw_idx(:, 1))), 'o', 'color', 'r', 'linewidth', 3);
         figure(2); subplot(2, 2, 3); hold on;
-        plot(pk_positions.h_locs(1:numsteps-1), pk_positions.h_pks(1:numsteps-1), 'o', 'color', 'r', 'linewidth', 3);
+        if size(pk_positions.h_locs, 1)>=numsteps-1
+            plot(pk_positions.h_locs(1:numsteps-1), pk_positions.h_pks(1:numsteps-1), 'o', 'color', 'r', 'linewidth', 3);
+        else
+            plot(pk_positions.h_locs, pk_positions.h_pks, 'o', 'color', 'r', 'linewidth', 3);
+        end
         figure(2); subplot(2, 2, 4); hold on;
         plot(pk_positions.l_locs(1:numsteps-1), inv_arr(pk_positions.l_locs(1:numsteps-1)), 'o', 'color', 'r', 'linewidth', 3);
         fig = gcf;
@@ -193,7 +216,9 @@ for f=1:length(filenums)
             plot(rel_endpoint(sw_idx(step, 1), 1), rel_endpoint(sw_idx(step, 1), 2), 'o', 'color', 'k', 'linewidth', 3);
             plot(rel_endpoint(sw_idx(step, 2), 1), rel_endpoint(sw_idx(step, 2), 2), 'o', 'color', 'k', 'linewidth', 3);
             %plot high and low points
-            plot(rel_endpoint(sw_idx(step, 3), 1), rel_endpoint(sw_idx(step, 3), 2), 'o', 'color', 'k', 'linewidth', 3);
+            if sw_idx(step, 3)~=1
+                plot(rel_endpoint(sw_idx(step, 3), 1), rel_endpoint(sw_idx(step, 3), 2), 'o', 'color', 'k', 'linewidth', 3);
+            end
             plot(rel_endpoint(sw_idx(step, 4), 1), rel_endpoint(sw_idx(step, 4), 2), 'o', 'color', 'k', 'linewidth', 3);
         end
         fig = gcf;
@@ -243,7 +268,11 @@ for f=1:length(filenums)
     catch ME
         err_trials(end+1) = filenum;
         disp(['skipping trial ' num2str(filenum)]);
-        continue
+        disp(ME.stack.name); 
+        disp(ME.message);
+        disp(ME.stack.line); 
+        %continue
+        break
     end
     
     %save some stuff down here if it all looks good
