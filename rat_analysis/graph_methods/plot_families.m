@@ -5,7 +5,7 @@ function plot_families(force_data, vicon_data, plot_color, save_dir)
 ax_fields = {'x', 'y', 'z'};
 %make a figure to do families of:
 %filtered force trace
-figure(71);
+figure(71); set(gcf, 'Name', '_filt_force'); 
 for xyz = 1:3
     subplot(3, 1, xyz); hold on;
     plot(force_data(:, xyz), 'Color', plot_color);
@@ -17,20 +17,20 @@ set(gcf, 'Position', [500 100 1000 900])
 
 figure(77); hold on; plotrange = 215:235;
 title('Unfiltered determining peaks');
-
+set(gcf, 'Name', '_findpeak_unfilt'); 
 plot(plotrange, vicon_data.mag.vel(plotrange), 'linewidth', 2, 'Color', plot_color, 'LineStyle', ':') %magnitude of vel
 plot(plotrange, vicon_data.mag.acc(plotrange), 'linewidth', 2, 'Color', plot_color) %magnitude of accel
 ax = gca;
 line([vicon_data.pks.vloc vicon_data.pks.vloc], ax.YLim, 'LineStyle','--', 'color', 'k')
 line([vicon_data.pks.aloc vicon_data.pks.aloc], ax.YLim, 'LineStyle','--', 'color', 'k')
 patch([vicon_data.pks.aloc-1 vicon_data.pks.aloc+1 vicon_data.pks.aloc+1 vicon_data.pks.aloc-1],...
-    sort([ax.YLim ax.YLim]), [.8 .8 .8], 'LineStyle', 'none');
-set(ax,'children',flipud(get(gca,'children')))
+    sort([ax.YLim ax.YLim]), [.9 .9 .9], 'LineStyle', 'none');
 legend({'Mag vel', 'Mag acc'}, 'Location', 'northwest');
+set(ax,'children',flipud(get(gca,'children')))
 hold off;
 
 %raw kinematic trace (x, y)
-figure(72);
+figure(72); set(gcf, 'Name', '_position_family');
 for xyz = 1:3
     h(xyz) = subplot(3, 2, xyz*2-1); hold on;
     plot(vicon_data.(ax_fields{xyz}).u(:, 11), 'Color', plot_color, 'Linewidth', 2)
@@ -49,7 +49,7 @@ end
 linkaxes(h, 'x');
 set(gcf, 'Position', [500 100 1000 900])
 
-figure(73);
+figure(73); set(gcf, 'Name', '_vel_family'); 
 for xyz = 1:3
     h(xyz) = subplot(3, 2, xyz*2-1); hold on;
     plot(vicon_data.(ax_fields{xyz}).du(:, 11), 'Color', plot_color, 'Linewidth', 2)
@@ -70,7 +70,7 @@ linkaxes(h, 'x');
 set(gcf, 'Position', [500 100 1000 900])
 
 %accel trace
-figure(74);
+figure(74); set(gcf, 'Name', '_accel_family');
 for xyz = 1:3
     h(xyz) = subplot(3, 2, xyz*2-1); hold on;
     plot(vicon_data.(ax_fields{xyz}).ddu(:, 11), 'Color', plot_color, 'Linewidth', 2)
@@ -91,7 +91,7 @@ set(gcf, 'Position', [500 100 1000 900])
 %plot the magnitude of velocity and of acceleration, with and
 %without filter
 clear('h');
-figure(75);
+figure(75); set(gcf, 'Name', '_vel_mag'); 
 h(1) = subplot(2, 1, 1); hold on;
 plot(vicon_data.mag.vel, 'Color', plot_color, 'Linewidth', 2);
 xlim([215 235]);
@@ -104,7 +104,7 @@ xlim([215 235]);
 linkaxes(h, 'x');
 set(gcf, 'Position', [500 100 1000 900])
 
-figure(76);
+figure(76); set(gcf, 'Name', '_accel_mag'); 
 h(1) = subplot(2, 1, 1); hold on;
 plot(vicon_data.mag.acc, 'Color', plot_color, 'Linewidth', 2);
 xlim([215 235]);
@@ -118,13 +118,14 @@ linkaxes(h, 'x');
 set(gcf, 'Position', [500 100 1000 900])
 
 %Spline version
-%TODO: CHECK THIS IS right spot not just moved to graph
 figure(78); hold on; 
+set(gcf, 'Name', '_findpeaks_spline');
 interp_seg = .25; 
 plot(1:.25:size(vicon_data.mag.acc, 1),vicon_data.mag.acc_spline, 'linewidth', 2);
 plot(1:.25:size(vicon_data.mag.vel, 1), vicon_data.mag.vel_spline, 'linewidth', 2);
 plot(plotrange, vicon_data.mag.acc(plotrange), 'o', 'linewidth', 3) %magnitude of accel
-legend({'Mag vel', 'Vel spline', 'Mag acc', 'Acc Spline'});
+plot(plotrange, vicon_data.mag.vel(plotrange), 'o', 'linewidth', 3) %magnitude of accel
+legend({'Mag vel', 'Vel spline', 'Mag acc', 'Acc Spline'}, 'Location', 'northwest');
 xlim([plotrange(1) plotrange(end)]);
 line([vicon_data.pks.spl_vloc vicon_data.pks.spl_vloc]*interp_seg + .75, ax.YLim, 'LineStyle','--', 'color', 'k')
 line([vicon_data.pks.spl_aloc vicon_data.pks.spl_aloc]*interp_seg + .75, ax.YLim, 'LineStyle','--', 'color', 'k')

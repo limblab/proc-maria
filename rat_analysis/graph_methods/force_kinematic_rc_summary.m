@@ -30,7 +30,7 @@ cutoff = 500;
 
 %filter and get magnitudes and angles between direction vectors
 [fdata, allmag, allang, allang2] = forcefilt(out_struct.data, out_struct.calmat, b, a);
-figure(1);
+figure(1); set(gcf, 'Name', '_sum_fig'); 
 set(gcf, 'Position', [100, 155, 1200, 860]);
 subplot(3, 3, 1);
 
@@ -117,14 +117,21 @@ for i=1:length(stim_vals)
     pkacc(i) = vfdata{i}.pks.aval;
     pkaccmn(i) = vfdata{i}.pks.amean;
     %save figure showing velocity, accel for this trace
-    if ~exist([path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces/'])
-        mkdir([path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces/']);
+    trfigpath = [path '../figures/summary/force_kinematic_rc/' filedate '/' muscle];
+    figure(77); h(1) = gcf; set(gca, 'FontSize', 20); 
+    figure(78); h(2) = gcf; set(gca, 'FontSize', 20); 
+    if ~exist([trfigpath '/traces' h(1).Name])
+        mkdir([trfigpath '/traces' h(1).Name]);
+        mkdir([trfigpath '/traces' h(2).Name]);
     end
-    fname = [muscle num2str(stim_vals(i), '%2d')];
+    fname = [muscle '_' num2str(stim_vals(i), '%0.2f')];
     fname(fname=='.') = '-';
-    savefig([path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces/' fname]); 
+    savefig(h(1), [path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces' h(1).Name '/' fname]); 
+    saveas(h(1), [path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces' h(1).Name '/' fname], 'epsc'); 
+    savefig(h(2), [path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces' h(2).Name '/' fname]); 
+    saveas(h(2), [path '../figures/summary/force_kinematic_rc/' filedate '/' muscle '/traces' h(2).Name '/' fname], 'epsc'); 
     if i~=length(stim_vals)
-        close([70 77 78]);
+        close([77 78]);
     end
     close(201); 
 end
@@ -138,6 +145,7 @@ end
 %deal with pkvel - check correlation
 %calculate and check whether pkacc correlates
 figure(2); title('Normalized Peaks'); hold on;
+set(gcf, 'Name', '_pks_norm'); 
 plot(stim_vals, (force_mnmag - min(force_mnmag))/(max(force_mnmag)- min(force_mnmag)), '-d', 'LineWidth', 3, 'MarkerSize', 5);
 plot(stim_vals, (pkvels - min(pkvels))/(max(pkvels)- min(pkvels)), '-d', 'LineWidth', 3, 'MarkerSize', 5);
 plot(stim_vals, (pkacc - min(pkacc))/(max(pkacc)- min(pkacc)), '-d', 'LineWidth', 3, 'MarkerSize', 5);
@@ -165,12 +173,12 @@ fig_prefs(gca, stim_vals);
 %calculate mean angles (say 3 points before?)
 ang_mean = zeros(length(stim_vals), 4);
 for i=1:length(vfdata)
-    A = vfdata{i}.angles.ddu(vfdata{i}.pks.vloc, :);
-    disp(A);
+    v_idx(i, :) = (vfdata{i}.pks.vloc-3):vfdata{i}.pks.vloc;
+    A = vfdata{i}.angles.ddu(v_idx(i, :), :);
     A(any(isnan(A), 2),:)=[];
     ang_mean(i, :) = mean(A);
 end
-subplot(3, 3, 5);
+subplot(3, 3, 5); hold on;
 plot(stim_vals, ang_mean,  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 title('Joint \Theta');
 fig_prefs(gca, stim_vals);
@@ -179,8 +187,7 @@ legend(ratAng);
 %endpoint trace XYZ vals
 tr_mean = zeros(length(stim_vals), 3);
 for i=1:length(vfdata)
-    A = [vfdata{i}.x.ddu(v_idx(i), 11) vfdata{i}.y.ddu(v_idx(i), 11) vfdata{i}.z.ddu(v_idx(i), 11)];
-    disp(A);
+    A = [vfdata{i}.x.ddu(v_idx(i, :), 11) vfdata{i}.y.ddu(v_idx(i, :), 11) vfdata{i}.z.ddu(v_idx(i, :), 11)];
     A(any(isnan(A), 2),:)=[];
     tr_mean(i, :) = mean(A);
 end
@@ -194,11 +201,11 @@ legend({'x', 'y', 'z'});
 %normalize and plot endpoint accel - multiple trace options
 subplot(3, 3, [7 8 9]); hold on;
 title('Diff traces');
-plot(stim_vals, force_mnmag/max(force_mnmag),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
-plot(stim_vals, mnacc/max(mnacc),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
-plot(stim_vals, t/max(t),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
-plot(stim_vals, t2/max(t2),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
-plot(stim_vals, t3/max(t3),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, (force_mnmag-min(force_mnmag))/(max(force_mnmag)-min(force_mnmag)),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, (mnacc-min(mnacc))/(max(mnacc)-min(mnacc)),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, (t-min(t))/(max(t)-min(t)),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, (t2-min(t2))/(max(t2)-min(t2)),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
+plot(stim_vals, (t3-min(t3))/(max(t3)-min(t3)),  '-d', 'LineWidth', 3, 'MarkerSize', 5);
 fig_prefs(gca, stim_vals);
 
 leg_info = {'force', ['mnacc ' num2str(round(corr2(mnacc, force_mnmag), 3))], ...
@@ -218,13 +225,15 @@ if usr_in == 'y'
     %savefig([figpath filedate '_' muscle]);
 
 figpath = ['/Users/mariajantz/Documents/Work/figures/summary/force_kinematic_rc/' filedate '/' muscle '/'];
-if ~exist(figpath)
-    mkdir(figpath);
+if ~exist([figpath 'fig/'])
+    mkdir([figpath 'fig/']);
+    mkdir([figpath 'eps/']);
 end
 %cycle through all the figures
 allfigs = get(0, 'children'); 
 for f = 1:length(allfigs)
-    savefig(allfigs(f), [figpath allfigs(f).Name]); 
+    savefig(allfigs(f), [figpath 'fig/' allfigs(f).Name]); 
+    saveas(allfigs(f), [figpath 'eps/' allfigs(f).Name], 'epsc'); 
 end
 end
 

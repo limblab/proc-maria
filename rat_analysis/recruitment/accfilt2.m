@@ -72,14 +72,14 @@ end
 
 %TODO: now plot the acceleration over a segment, and the velocity over a
 %segment
-figure(70); hold on;
-plot(plotrange, fdata.mag.vel(plotrange), 'linewidth', 2) %magnitude of vel
-plot(plotrange, fdata.mag.acc(plotrange), 'linewidth', 2) %magnitude of accel
-plot(plotrange(2):plotrange(end), diff(fdata.mag.vel(plotrange)), 'linewidth', 2) %accel including negatives
-plot(plotrange, zeros(1, length(plotrange)), 'color', 'k') %x axis
-ax = gca;
-line([locs(p) locs(p)], ax.YLim, 'LineStyle','--', 'color', 'k')
-legend({'Mag vel', 'Mag acc', 'Diff vel'}, 'Location', 'northwest');
+% figure(70); hold on;
+% plot(plotrange, fdata.mag.vel(plotrange), 'linewidth', 2) %magnitude of vel
+% plot(plotrange, fdata.mag.acc(plotrange), 'linewidth', 2) %magnitude of accel
+% plot(plotrange(2):plotrange(end), diff(fdata.mag.vel(plotrange)), 'linewidth', 2) %accel including negatives
+% plot(plotrange, zeros(1, length(plotrange)), 'color', 'k') %x axis
+% ax = gca;
+% line([locs(p) locs(p)], ax.YLim, 'LineStyle','--', 'color', 'k')
+% legend({'Mag vel', 'Mag acc', 'Diff vel'}, 'Location', 'northwest');
 
 %TODO: do this for filtered data?
 interp_seg = .25; 
@@ -117,8 +117,7 @@ fdata.pks.vloc = locs(p);
 apk_arr = fdata.mag.acc((fdata.pks.vloc-5):(fdata.pks.vloc+1)); 
 [fdata.pks.aval, fdata.pks.aloc] = max(apk_arr);
 fdata.pks.aloc = fdata.pks.aloc + fdata.pks.vloc-6;
-fdata.mag.acc((fdata.pks.aloc-1):(fdata.pks.aloc+1)) %print this temp so I see it's at peak
-fdata.pks.amean = mean(fdata.mag.acc((fdata.pks.aloc):(fdata.pks.aloc+2)));
+fdata.pks.amean = mean(fdata.mag.acc((fdata.pks.aloc-1):(fdata.pks.aloc+1)));
 %TODO avg either side
 %hmm. okay. Why does the other version track so much more closely?
 
