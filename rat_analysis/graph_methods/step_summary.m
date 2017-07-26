@@ -16,8 +16,9 @@ numsteps = 10;
 %filedates = {'160908', '161006', '161101', '161116', '170406'};
 filedates = '170715';
 %filenums = [41:166];
-filenums = [44:49 60 66 68 71:73 81 82 84:87 89 91 104 106 112 117 119 ...
-    131 143 144 153 155:160 162:166];
+%really messed up trials: 66
+%need larger peak distance: 81
+filenums = [85:87 112 117 131 153 157 159 165 166];
 
 for f=1:length(filenums)
     filenum = filenums(f);
@@ -39,7 +40,7 @@ for f=1:length(filenums)
         %next draw all traces for a trial, relative to the hip marker at zero
         figure(1); subplot(4, 4, [3 4 7 8 11 12]); hold on;
         rel_endpoint = rat.toe-rat.hip_bottom;
-        finpt = min(5000, size(rel_endpoint, 1)); 
+        finpt = min(6000, size(rel_endpoint, 1)); 
         plot(rel_endpoint(1:finpt, 1), rel_endpoint(1:finpt, 2))
         title([filedate ' Trial ' num2str(filenum)]);
         
@@ -85,6 +86,8 @@ for f=1:length(filenums)
         %TODO: SWITCH THIS BACK VERY IMPORTANT
         %TODO: FIGURE OUT WHY THIS NEEDS TO BE SWITCHED AND WHAT'S
         %HAPPENING
+%         b_vals = sort(pk_positions.b_locs(1:numsteps+1));
+%         b_vals = b_vals(2:end); 
         sw_idx = [f_vals(1:numsteps) b_vals(1:numsteps)];
         
         %choose indices to exclude when determining high peaks - otherwise the back
@@ -271,7 +274,6 @@ for f=1:length(filenums)
         disp(ME.stack.name); 
         disp(ME.message);
         disp(ME.stack.line); 
-        %continue
         break
     end
     

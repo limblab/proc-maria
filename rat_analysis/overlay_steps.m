@@ -3,8 +3,8 @@ clear all; close all;
 err_trials = []; %rig this up for removing steps from set
 numsteps = 11;
 
-filedate_val = '170713';
-trials = [108:114];
+filedate_val = '170715';
+trials = [42:49];
 ax_check = 1; %1 for length (x), 2 for height (y); 
 sumpath = '/Users/mariajantz/Documents/Work/data/kinematics/processed_summary/summary_steps.mat';
 load(sumpath);
@@ -42,15 +42,17 @@ for i=1:length(trials)
     trace_x = {};
     trace_y = {};
     trace_z = {};
-    for i=2:size(sw_vals, 1)-1
-        trace_x{end+1} = rel_endpoint(sw_vals(i, 1):sw_vals(i+1, 1), 1);
-        trace_y{end+1} = rel_endpoint(sw_vals(i, 1):sw_vals(i+1, 1), 2);
-        trace_z{end+1} = rel_endpoint(sw_vals(i, 1):sw_vals(i+1, 1), 3);
+    for j=2:size(sw_vals, 1)-1
+        trace_x{end+1} = rel_endpoint(sw_vals(j, 1):sw_vals(j+1, 1), 1);
+        trace_y{end+1} = rel_endpoint(sw_vals(j, 1):sw_vals(j+1, 1), 2);
+        trace_z{end+1} = rel_endpoint(sw_vals(j, 1):sw_vals(j+1, 1), 3);
     end
     up_endpt = [upsamp(trace_x); upsamp(trace_y); upsamp(trace_z)];
     mn_endpt = [mean(upsamp(trace_x)); mean(upsamp(trace_y)); mean(upsamp(trace_z))];
-    plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3);
     
+    %if i~=1
+    plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3);
+    %end
     
     %?? plot steps otherwise? maybe extremes or something? Second step, 8th
     %step
@@ -79,7 +81,7 @@ ylim(ax_y);
 legend(legendinfo); axis equal
 
 %add bar chart
-figure; hold on;
+figure(1); hold on;
 bar(hvals);
 errorbar(1:length(trials), hvals, hstd, '.', 'linewidth', 4)
 ax = gca;
@@ -91,6 +93,30 @@ set(ax, 'XTick', [1:length(trials)]);
 set(ax, 'XTickLabel', trials);
 set(ax, 'fontsize', 20);
 set(gca,'TickDir','out');
+
+%add bar chart
+figure(2); hold on;
+bar(lvals);
+errorbar(1:length(trials), lvals, lstd, '.', 'linewidth', 4)
+ax = gca;
+ylabel('X (mm)');
+xlabel('Trial');
+title(['Length variation ' filedate_val]);
+%lbls = cellfun(@(x) x.trial, trialname(idx(:, 2)), 'UniformOutput', 0)
+set(ax, 'XTick', [1:length(trials)]);
+set(ax, 'XTickLabel', trials);
+set(ax, 'fontsize', 20);
+set(gca,'TickDir','out');
+
+%% save stuff
+savepath = '/Users/mariajantz/Documents/Work/figures/summary/trialsets/'; 
+figure(1); 
+saveas(gcf, [savepath filedate_val '_' num2str(trials(1), '%02d') 'HeightBar'], 'epsc'); 
+figure(2); 
+saveas(gcf, [savepath filedate_val '_' num2str(trials(1), '%02d') 'LengthBar'], 'epsc'); 
+figure(31); set(gca, 'FontSize', 20); 
+saveas(gcf, [savepath filedate_val '_' num2str(trials(1), '%02d') 'Traces'], 'epsc'); 
+
 
 
 %% add chart with all length variables
