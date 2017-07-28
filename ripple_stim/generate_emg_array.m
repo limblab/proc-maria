@@ -7,7 +7,7 @@
 % stimulate based on current arrays
 
 %% load data file
-emg_file = 'EMGdata';
+emg_file = '/Users/mariajantz/Documents/Work/data/EMGdata.mat';
 load(emg_file);
 %musc_names = {'gluteus max', 'gluteus med', 'gastroc', 'vastus lat', 'biceps fem A',...
 %    'biceps fem PR', 'biceps fem PC', 'tib ant', 'rect fem', 'vastus med', 'adduct mag', ...
@@ -148,31 +148,71 @@ legendinfo{end+1} = 'IP';
 % emg_array{ch2}(indices) = 0; 
 
 %% "Squish" part of the array relative to the other
-scale_fact = .5; %scale the indices selected by this factor
-scale_start = 300; %indices to scale from the array as it exists
-scale_end = length(emg_array{1});
-
-x = 1:1:(scale_end-scale_start+1);
-xq = 1/scale_fact:1/scale_fact:(scale_end-scale_start);
-
-for i=1:length(emg_array)
-    scaled = interp1(x, emg_array{i}(scale_start:scale_end), xq);
-    emg_array{i} = [emg_array{i}(1:scale_start) scaled];
-    
-end
+% scale_fact = .5; %scale the indices selected by this factor
+% scale_start = 300; %indices to scale from the array as it exists
+% scale_end = length(emg_array{1});
+% 
+% x = 1:1:(scale_end-scale_start+1);
+% xq = 1/scale_fact:1/scale_fact:(scale_end-scale_start);
+% 
+% for i=1:length(emg_array)
+%     scaled = interp1(x, emg_array{i}(scale_start:scale_end), xq);
+%     emg_array{i} = [emg_array{i}(1:scale_start) scaled];
+%     
+% end
 
 %% Plot
 
+%all plots on top of each other
 figure; hold on;
 for i=1:size(emg_array, 2)
     plot(emg_array{i}, 'linewidth', 2, 'color', colors{i}/255);
 end
 legend(legendinfo);
 
+%plotted separately in a 5x2 chart
+fig = figure; 
+fig.OuterPosition = [100 500 1200 525]; 
+
+%color choices
+c1 = [12 100 133]/255; %stance
+c2 = [191 29 41]/255; %swing
+c3 = [125 58 145]/255; %dual
+c_arr = [c2; c3; c1; c1; c2; c1; c3; c1; c2; c2];
+
+vals = [1:4 6:size(emg_array, 2)]; 
+cutoff_arr = ones(size(emg_array{1}))*.16; 
+xval_arr = linspace(0, 100, length(emg_array{i})); 
+for i=1:size(emg_array, 2)-1
+    musc = vals(i);
+    subplot(2, 5, i); 
+    hold on; 
+    %plot the arrays, cutoff, and error
+    plot(xval_arr, emg_array{musc}, 'linewidth', 3, 'color', c_arr(i, :));
+    plot(xval_arr, cutoff_arr, '--', 'linewidth', 1.5, 'color', 'k'); 
+    %error - do fill within 1 standard deviation
+    y1 = std_array{musc}(1:length(emg_array{musc}))+emg_array{musc};
+    y2 = emg_array{musc}-std_array{musc}(1:length(emg_array{musc}));
+    Y = [y1 fliplr(y2)];
+    X = [xvals fliplr(xvals)];
+    h = fill(X, Y, c_arr(i, :));
+    set(h, 'facealpha', .3);
+    set(h, 'EdgeColor', 'None'); 
+    
+    %plot formatting
+    ax = gca; 
+    ax.FontSize = 16; 
+    title(legendinfo{musc}); 
+    xlim([0 100]); 
+    ylim([0 1]);
+    yticks([0 .5 1]); 
+end
 %can now reference a specific filtered average with mus_mean{muscle, animal}
 %plot(mus_mean{1,1}); hold on;
 
 %% Save array in format that is easily useable by call_emg_stim
+nsave = true;
+if nsave
 usr_in = input('Save as: ', 's');
 if ~strcmp(usr_in, 'n')
     disp('Saving.'); 
@@ -180,5 +220,6 @@ if ~strcmp(usr_in, 'n')
     [pathstr, name, ext] = fileparts(p);
     pathstr = [pathstr '/../..' '/../' 'stim_arrays/'];
     save([pathstr usr_in], 'legendinfo', 'emg_array');
+end
 end
 

@@ -42,7 +42,7 @@ end
         idx = input('Which indices to remove?');
         high_locs(idx) = [];
     end
-    ad = char(input('Add values to fig1 array? y/n ', 's')); 
+    ad = char(input('Add values to fig2 array? y/n ', 's')); 
     if ad=='y'
         idx = input('Insert value after which point?'); 
         val = input('Which value to insert?'); 
