@@ -13,7 +13,7 @@
 %load emg_array (aka emg array)
 %make sure you're running this code in stim_arrays location
 cd 'C:\Users\mkj605\Documents\GitHub\stim_arrays';
-load('half_vl_300_halfstance.mat'); 
+load('standard.mat'); 
 legendinfo = {legendinfo{1:3} legendinfo{6:end}};
 emg_array = {emg_array{1:3} emg_array{6:end}};
 muscles = 1:length(emg_array); %can also pick and choose muscles to implement
