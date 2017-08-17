@@ -12,15 +12,15 @@
 %load legendinfo
 %load emg_array (aka emg array)
 %make sure you're running this code in stim_arrays location
-cd 'C:\Users\mkj605\Documents\GitHub\stim_arrays';
-load('half_vl_300_halfstance.mat'); 
-legendinfo = {legendinfo{1:3} legendinfo{6:end}};
-emg_array = {emg_array{1:3} emg_array{6:end}};
+% cd 'C:\Users\mkj605\Documents\GitHub\stim_arrays';
+% load('stance_twothirds.mat');
+legendinfo = {legendinfo{1:4} legendinfo{6:end}};
+emg_array = {emg_array{1:4} emg_array{6:end}};
 muscles = [1:length(emg_array)]; %1:length(emg_array); %can also pick and choose muscles to implement
 
 
 %define non-given parameters:
-channels = [2 4 6 9 10 3 5 7 1];
+channels = [2 4 6 8 9 10 3 5 7 1];
 pw = .2; %ms
 %colors = {[204 0 0], [255 125 37], [153 84 255],  [106 212 0], [0 102 51], [0 171 205], [0 0 153], [102 0 159], [64 64 64], [255 51 153], [253 203 0]};
 
@@ -28,8 +28,8 @@ pw = .2; %ms
 %define in the same order as 'muscles' array
 emglow_limit = .16*ones(1, length(channels)); %[.15 .13 .13 .13 .13 .13 .13 .13 .13 .13]; %get rid of low noise and co-contraction issues
 emghigh_limit = 1*ones(1, length(channels)); %get rid of excessively high spikes
-amplow_limit = [.6 2.3 1.6 .4 .3 1.7 1 1.6 .6]; %lowest level of stim to twitch (err on low side)
-amphigh_limit = [2.5 4.5 4 1.5 2.2 4.5 4 4 2.5];  %highest level of stim to use
+amplow_limit = [.9 1.2 2.5 1.9 1.2 .8 1.7 2 2.2 .7]; %lowest level of stim to twitch (err on low side)
+amphigh_limit = [2.4 3.5 4.5 3 2 1.5 2.8 4 4 2.7];  %highest level of stim to use
 
 %check that limits are all defined
 
@@ -57,11 +57,8 @@ end
 %% Define parameters to be used to run the stimulation cycle (number of runs, length of runs, etc)
 %TODO: figure out best stretch factor
 %choose number of time
-repeats = 11; %number of times to repeat the cycle
-slowdown_factor = 4; %two seems to be pretty much a normal length step. Kind of.
-amp_adjust = 1*ones(1, length(channels));
-%amp_adjust([9]) = 1.8; %adjust the nth one in current array (1st is GS, 2nd is VL, etc)
-%amp_adjust([1 8 9]) = 2.2; 
+
+%amp_adjust([1 9 10]) = 1.8; 
 %amp_adjust = 1; 
 
 if length(amp_adjust)>1 %if using an array of amplitude adjustment
@@ -80,7 +77,7 @@ for i=1:length(current_arr)
 end
 legend(legendinfo{muscles});
 
-stim_update = 30; stim_freq = 50; original_freq = 5000;
+stim_update = 20; stim_freq = 50; original_freq = 5000;
 
 %% save original array (emg_array), repeats, slowdown factor, current
 %adjustment, current array, muscles, and legend. Autoincrements.
@@ -114,7 +111,15 @@ disp('starting VICON')
 
 pause_between = 0; 
 a = tic; 
-array_stim(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, pause_between, 'COM5');
+
+
+%array_stim(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, pause_between, 'COM5');
+force_data = array_stim_force(current_arr, stim_update, stim_freq, original_freq, slowdown_factor, pw, channels, repeats, legendinfo, pause_between, 'COM4');
+
+%save force data
+save([filepath dayname '/' datestr(now, 'yyyymmdd') '_' num2str(i,'%03d') '_force.mat'], 'force_data'); 
+
+
 toc(a); 
 
 putdata(ao,stopdata);  % stop the Vicon data acquisition

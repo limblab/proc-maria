@@ -63,12 +63,12 @@ if ~exist('ws', 'var')
     ws = wireless_stim(ws_struct);
     ws.init();
 end
-
-%set up object to control force collection
-f = ForceCollect; 
-f.init(); 
-%set duration of force collection to total time of stimulation plus 4 seconds
-f.set_samples((totaltime + 4) * f.sample_rate)
+% 
+% %set up object to control force collection
+% f = ForceCollect; 
+% f.init(); 
+% %set duration of force collection to total time of stimulation plus 4 seconds
+% f.set_samples((totaltime + 4) * f.sample_rate)
 
 
 %set train delay so I have staggered pulses
@@ -110,7 +110,7 @@ ws.set_Run(ws.run_cont, channels);
 %stimulate at appropriate channels in loop
 %now that this is converted to an array of only the values I'll be sending,
 %I need to actually stimulate! using a while loop with tic and toc ugh.
-f.start();
+% f.start();
 b = tic; 
 pause(0.5);
 
@@ -135,7 +135,7 @@ for steps=1:repeats %take as many steps as is specified
     end
 
     for i=1:length(ds_array{1})%for every data point
-        disp(['data pt ' num2str(i)]); 
+        %disp(['data pt ' num2str(i)]); 
         val = tic; 
 
         command{1} = struct('CathAmp', cmd_cath(:, i),... %in uA
@@ -157,7 +157,8 @@ end
 ws.set_Run(ws.run_stop, channels);
 
 pause(4);
-force_data = f.stop(); 
+%force_data = f.stop(); 
+force_data = []; 
 toc(b); 
 
 end
