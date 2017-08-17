@@ -8,7 +8,7 @@ clear all; close all;
 
 %set variables for each run
 
-pkdist = 200;
+pkdist = 120;
 pkwid = 10; 
 err_trials = []; %rig this up for catching errored trials
 numsteps = 10; 
@@ -19,7 +19,7 @@ filedates = '170713';
 %really messed up trials: 66
 %need larger peak distance: 81
 %filenums = [85:87 112 117 131 153 157 159 165 166];
-filenums = 46; 
+filenums = 42; 
 
 for f=1:length(filenums)
     filenum = filenums(f);
@@ -87,8 +87,8 @@ for f=1:length(filenums)
         %TODO: SWITCH THIS BACK VERY IMPORTANT
         %TODO: FIGURE OUT WHY THIS NEEDS TO BE SWITCHED AND WHAT'S
         %HAPPENING
-%         b_vals = sort(pk_positions.b_locs(1:numsteps+1));
-%         b_vals = b_vals(2:end); 
+         b_vals = sort(pk_positions.b_locs(1:numsteps+1));
+         b_vals = b_vals(2:end); 
         sw_idx = [f_vals(1:numsteps) b_vals(1:numsteps)];
         
         %choose indices to exclude when determining high peaks - otherwise the back

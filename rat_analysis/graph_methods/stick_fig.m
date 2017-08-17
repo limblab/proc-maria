@@ -1,9 +1,9 @@
 clear all;
 
 filedates = {'170713'};
-filenums = 46;
+filenums = 29:32;
 steps = false;
-avg_steps = true;
+avg_steps = false;
 
 %load the summary info
 savepath = '/Users/mariajantz/Documents/Work/data/kinematics/processed_summary/';
@@ -68,7 +68,7 @@ for f=1:length(filenums)
     end
     
     pt_dist = 10;
-    t_interval = b_ind;
+    t_interval = b_ind:e_ind;
     for val=b_ind:e_ind
         valdist = sqrt((rat_mat{end}(val, 1)-rat_mat{end}(t_interval(end), 1))^2 + ...
             (rat_mat{end}(val, 2)-rat_mat{end}(t_interval(end), 2))^2 + ...
@@ -85,17 +85,14 @@ for f=1:length(filenums)
     rat_mat = cellfun(@(array) array(t_interval, :), rat_mat_orig, 'UniformOutput', false);
     rat_mat_s = cellfun(@(x) x(1:skip_frames:end, :), rat_mat, 'UniformOutput', false); %set origin to bottom of hip in every frame
     
-    disp(rat_mat_s{5}(1, :))
-    
     annotate = false;
     hold_prev_frames = true;
     saving = false;
     
-    xlabel('X (mm)');
-    ylabel('Y (mm)');
-    
     figure;
     [an, footstrike, footoff] = saveGaitMovie(rat_mat_s, rat.f, hold_prev_frames, 'step.avi', saving, annotate);
+    xlabel('X (mm)');
+    ylabel('Y (mm)');
     ylim([-100 30])
     xlim([-60 70])
     

@@ -32,7 +32,7 @@
 % 2016-06-25: Maria Jantz added saving capabilities for both video and
 % individual frames as png files. 
 
-function [fhandle, footStrike, footOff] = saveGaitMovie( data, freq, overlay, filename, saving, annotate)
+function [fhandle, footStrike, footOff] = saveGaitMovie( data, freq, overlay, filename, saving, annotate, startpos)
 
     nDim = size(data{1}); %get the dimensions of the array passed in
     
@@ -46,7 +46,11 @@ function [fhandle, footStrike, footOff] = saveGaitMovie( data, freq, overlay, fi
         Z = cell2mat(cellfun(@(x)x(:,3),data,'UniformOutput', false));
         h = line(X(1,:),Y(1,:),Z(1,:),'Marker','o');
     else
-        h = line(X(1,:),Y(1,:),'Marker','o', 'LineWidth', 2, 'Color', 'k');
+        if ~startpos
+           h = line(X(1,:),Y(1,:),'Marker','o', 'LineWidth', 2, 'Color', 'k');
+        else 
+            h = line(X(1,:),Y(1,:),'Marker','o', 'LineWidth', 2, 'Color', 'b');
+        end
     end    
     
     %set(h, 'linewidth', 3); 
