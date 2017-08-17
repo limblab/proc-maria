@@ -8,17 +8,18 @@ clear all; close all;
 
 %set variables for each run
 
-pkdist = 80;
+pkdist = 120;
 pkwid = 10; 
 err_trials = []; %rig this up for catching errored trials
 numsteps = 10; 
 
 %filedates = {'160908', '161006', '161101', '161116', '170406'};
-filedates = '170715';
+filedates = '170713';
 %filenums = [41:166];
 %really messed up trials: 66
 %need larger peak distance: 81
-filenums = [85:87 112 117 131 153 157 159 165 166];
+%filenums = [85:87 112 117 131 153 157 159 165 166];
+filenums = 47; 
 
 for f=1:length(filenums)
     filenum = filenums(f);
@@ -109,13 +110,107 @@ for f=1:length(filenums)
             subplot(1, 3, 3); hold on;
             plot(rat.angles.ankle(sw_idx(i, 1):sw_idx(i+1, 1)));
             a_arr{i} = rat.angles.ankle(sw_idx(i, 1):sw_idx(i+1, 1));
+            x_arr{i} = rat.toe(sw_idx(i, 1):sw_idx(i+1, 1), 1) - rat.hip_bottom(sw_idx(i, 1):sw_idx(i+1, 1), 1); 
+            y_arr{i} = rat.toe(sw_idx(i, 1):sw_idx(i+1, 1), 2) - rat.hip_bottom(sw_idx(i, 1):sw_idx(i+1, 1), 2); 
         end
-        subplot(1, 3, 1); title('Hip');
-        plot(mean(upsamp(h_arr)), 'linewidth', 2, 'color', 'k');
-        subplot(1, 3, 2); title('Knee');
-        plot(mean(upsamp(k_arr)), 'linewidth', 2, 'color', 'k');
-        subplot(1, 3, 3); title('Ankle');
-        plot(mean(upsamp(a_arr)), 'linewidth', 2, 'color', 'k');
+        figure(5); 
+        subplot(1, 3, 1); hold on; title('Hip');
+        %do fill
+        colors = [170, 203, 255; 0, 38, 99]/255;
+        subplot(1, 3, 1); hold on; title('Hip');
+        y1 = std(upsamp(h_arr)) + mean(upsamp(h_arr));
+        y2 = mean(upsamp(h_arr)) - std(upsamp(h_arr));
+        y1(1) = []; y2(1) = []; 
+        xvals = 1:length(y1); 
+        Y = [y1 fliplr(y2)];
+        X = [xvals fliplr(xvals)];
+        h = fill(X, Y, colors(1, :));
+        set(h, 'EdgeColor', 'None'); 
+        %set(h, 'facealpha', .5);
+        subplot(1, 3, 2); hold on; title('Hip');
+        y1 = std(upsamp(k_arr)) + mean(upsamp(k_arr));
+        y2 = mean(upsamp(k_arr)) - std(upsamp(k_arr));
+        y1(1) = []; y2(1) = []; 
+        xvals = 1:length(y1); 
+        Y = [y1 fliplr(y2)];
+        X = [xvals fliplr(xvals)];
+        h = fill(X, Y, colors(1, :));
+        set(h, 'EdgeColor', 'None'); 
+        
+        subplot(1, 3, 3); hold on; title('Hip');
+        y1 = std(upsamp(a_arr)) + mean(upsamp(a_arr));
+        y2 = mean(upsamp(a_arr)) - std(upsamp(a_arr));
+        y1(1) = []; y2(1) = []; 
+        xvals = 1:length(y1); 
+        Y = [y1 fliplr(y2)];
+        X = [xvals fliplr(xvals)];
+        h = fill(X, Y, colors(1, :));
+        set(h, 'EdgeColor', 'None'); 
+        %plot lines
+        subplot(1, 3, 1); 
+        plot(mean(upsamp(h_arr)), 'linewidth', 2, 'color', colors(2, :));
+        ylabel('Angle (Degrees)'); 
+        xlabel('Time'); 
+        xlim([1 length(y1)]); 
+        set(gca, 'XTickLabel', []); 
+        set(gca, 'TickDir', 'out'); 
+        set(gca, 'FontSize', 20); 
+        subplot(1, 3, 2); hold on; title('Knee');
+        plot(mean(upsamp(k_arr)), 'linewidth', 2, 'color', colors(2, :));
+        ylabel('Angle (Degrees)'); 
+        xlabel('Time'); 
+        xlim([1 length(y1)]); 
+        set(gca, 'XTickLabel', []); 
+        set(gca, 'TickDir', 'out'); 
+        set(gca, 'FontSize', 20); 
+        subplot(1, 3, 3); hold on; title('Ankle');
+        plot(mean(upsamp(a_arr)), 'linewidth', 2, 'color', colors(2, :));
+        ylabel('Angle (Degrees)'); 
+        xlabel('Time'); 
+        xlim([1 length(y1)]); 
+        set(gca, 'XTickLabel', []); 
+        set(gca, 'TickDir', 'out'); 
+        set(gca, 'FontSize', 20); 
+        
+        figure(6); %x and y time plots 
+        subplot(1, 2, 1); hold on; title('X movement');
+        y1 = std(upsamp(x_arr)) + mean(upsamp(x_arr));
+        y2 = mean(upsamp(x_arr)) - std(upsamp(x_arr));
+        y1(1) = []; y2(1) = []; 
+        xvals = 1:length(y1); 
+        Y = [y1 fliplr(y2)];
+        X = [xvals fliplr(xvals)];
+        h = fill(X, Y, colors(1, :));
+        set(h, 'EdgeColor', 'None'); 
+        
+        subplot(1, 2, 1); 
+        plot(mean(upsamp(x_arr)), 'linewidth', 2, 'color', colors(2, :));
+        ylabel('X (mm, origin on back of hip)'); 
+        xlabel('Time'); 
+        xlim([1 length(y1)]); 
+        set(gca, 'XTickLabel', []); 
+        set(gca, 'TickDir', 'out'); 
+        set(gca, 'FontSize', 20); 
+        
+        subplot(1, 2, 2); hold on; title('Y movement');
+        y1 = std(upsamp(y_arr)) + mean(upsamp(y_arr));
+        y2 = mean(upsamp(y_arr)) - std(upsamp(y_arr));
+        y1(1) = []; y2(1) = []; 
+        xvals = 1:length(y1); 
+        Y = [y1 fliplr(y2)];
+        X = [xvals fliplr(xvals)];
+        h = fill(X, Y, colors(1, :));
+        set(h, 'EdgeColor', 'None'); 
+        
+        subplot(1, 2, 2); 
+        plot(mean(upsamp(y_arr)), 'linewidth', 2, 'color', colors(2, :));
+        ylabel('Y (mm, origin on back of hip)'); 
+        xlabel('Time'); 
+        xlim([1 length(y1)]); 
+        set(gca, 'XTickLabel', []); 
+        set(gca, 'TickDir', 'out'); 
+        set(gca, 'FontSize', 20); 
+        
         
         for i = 1:size(sw_idx, 1)-1
             diffval = round((sw_idx(i+1, 1)-sw_idx(i, 2))/3, 0);

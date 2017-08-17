@@ -3,8 +3,8 @@ clear all; close all;
 err_trials = []; %rig this up for removing steps from set
 numsteps = 11;
 
-filedate_val = '170715';
-trials = [42:49];
+filedate_val = '170713';
+trials = [103:107];
 ax_check = 1; %1 for length (x), 2 for height (y); 
 sumpath = '/Users/mariajantz/Documents/Work/data/kinematics/processed_summary/summary_steps.mat';
 load(sumpath);
@@ -48,7 +48,7 @@ for i=1:length(trials)
         trace_z{end+1} = rel_endpoint(sw_vals(j, 1):sw_vals(j+1, 1), 3);
     end
     up_endpt = [upsamp(trace_x); upsamp(trace_y); upsamp(trace_z)];
-    mn_endpt = [mean(upsamp(trace_x)); mean(upsamp(trace_y)); mean(upsamp(trace_z))];
+    mn_endpt = [nanmean(upsamp(trace_x)); nanmean(upsamp(trace_y)); nanmean(upsamp(trace_z))];
     
     %if i~=1
     plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3);

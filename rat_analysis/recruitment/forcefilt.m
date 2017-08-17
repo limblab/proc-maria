@@ -8,6 +8,7 @@ for i=1:length(data)
     %filter
     fdata = filtfilt(b,a,temp_data-base); 
     
+   
     %this is the magnitude of the movement
     fmag = sqrt(fdata(:,1).^2 + fdata(:,2).^2 + fdata(:,3).^2);   
     %this is the angle between two of the directions (which two?)

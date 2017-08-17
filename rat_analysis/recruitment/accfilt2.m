@@ -84,16 +84,16 @@ end
 %TODO: do this for filtered data?
 interp_seg = .25; 
 
-fdata.mag.vel_spline = interp1(1:size(fdata.mag.vel, 1), fdata.mag.vel, 1:.25:size(fdata.mag.vel, 1), 'spline'); 
-fdata.mag.acc_spline = interp1(1:size(fdata.mag.acc, 1), fdata.mag.acc, 1:.25:size(fdata.mag.acc, 1),'spline');
+%fdata.mag.vel_spline = interp1(1:size(fdata.mag.vel, 1), fdata.mag.vel, 1:.25:size(fdata.mag.vel, 1), 'spline'); 
+%fdata.mag.acc_spline = interp1(1:size(fdata.mag.acc, 1), fdata.mag.acc, 1:.25:size(fdata.mag.acc, 1),'spline');
 
 %find peak velocity within close range of the peak found in non-interp 
-vs_range = (locs(p)/interp_seg-3/interp_seg):(locs(p)/interp_seg+2/interp_seg); 
-[fdata.pks.spl_vval, fdata.pks.spl_vloc] = max(fdata.mag.vel_spline(vs_range)); 
-fdata.pks.spl_vloc = fdata.pks.spl_vloc + vs_range(1)-1; 
-as_range = (fdata.pks.spl_vloc-4/interp_seg):(fdata.pks.spl_vloc+1/interp_seg); 
-[fdata.pks.spl_aval, fdata.pks.spl_aloc] = max(fdata.mag.acc_spline(as_range)); 
-fdata.pks.spl_aloc = fdata.pks.spl_aloc + as_range(1)-1; 
+% vs_range = (locs(p)/interp_seg-3/interp_seg):(locs(p)/interp_seg+2/interp_seg); 
+% [fdata.pks.spl_vval, fdata.pks.spl_vloc] = max(fdata.mag.vel_spline(vs_range)); 
+% fdata.pks.spl_vloc = fdata.pks.spl_vloc + vs_range(1)-1; 
+% as_range = (fdata.pks.spl_vloc-4/interp_seg):(fdata.pks.spl_vloc+1/interp_seg); 
+% [fdata.pks.spl_aval, fdata.pks.spl_aloc] = max(fdata.mag.acc_spline(as_range)); 
+% fdata.pks.spl_aloc = fdata.pks.spl_aloc + as_range(1)-1; 
 
 
 idx=3;
@@ -105,6 +105,8 @@ end
 
 initvel = fdata.mag.vel(locs(p)-idx:locs(p));
 mnacc = mean(diff(initvel));
+fdata.mag.dfvel = diff(fdata.mag.vel_filt); 
+fdata.mag.dvel = diff(fdata.mag.vel); 
 % NOTE: compare this mean acceleration value to the version from the
 % traces
 traceacc = fdata.mag.acc(locs(p)-idx-1:locs(p)-1);
@@ -112,12 +114,11 @@ traceacc = fdata.mag.acc(locs(p)-idx-1:locs(p)-1);
 
 %fdata.locs.rng = (locs(p)-idx):locs(p);
 %TODO: filtered version too
-%TODO: spline interp filtered version
 fdata.pks.vloc = locs(p); 
-apk_arr = fdata.mag.acc((fdata.pks.vloc-5):(fdata.pks.vloc+1)); 
+apk_arr = fdata.mag.dvel((fdata.pks.vloc-5):(fdata.pks.vloc+1)); 
 [fdata.pks.aval, fdata.pks.aloc] = max(apk_arr);
 fdata.pks.aloc = fdata.pks.aloc + fdata.pks.vloc-6;
-fdata.pks.amean = mean(fdata.mag.acc((fdata.pks.aloc-1):(fdata.pks.aloc+1)));
+fdata.pks.amean = mean(fdata.mag.dvel((fdata.pks.aloc-1):(fdata.pks.aloc+1)));
 %TODO avg either side
 %hmm. okay. Why does the other version track so much more closely?
 
