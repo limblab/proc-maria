@@ -1,7 +1,7 @@
 clear all;
 
 filedates = {'170713'};
-filenums = 47;
+filenums = 46;
 steps = false;
 avg_steps = true;
 

@@ -63,15 +63,15 @@ plot(stim_vals, cell2mat(cellfun(@(x) mean(x(mnrange, 3)), fdata, 'UniformOutput
 fig_prefs(gca, stim_vals);
 legend({'x', 'y', 'z'});
 
-%coords from stick_fig of the initial point: 
-coords = [13.6505 -47.0104 -8.8521]; 
-trial_force = fdata{11}; 
-trial_vectors = mean(trial_force(mnrange, 1:3));
-figure(8); hold on; 
-color = [18 75 178]/255;
-quiver(coords(1), coords(2), trial_vectors(1)*100, trial_vectors(2)*100, 'MaxHeadSize', 0.5, 'Linewidth', 3, 'Color', 'k');
-axis equal;
-ax = gca; 
+% %coords from stick_fig of the initial point: 
+% coords = [13.6505 -47.0104 -8.8521]; 
+% trial_force = fdata{11}; 
+% trial_vectors = mean(trial_force(mnrange, 1:3));
+% figure(8); hold on; 
+% color = [18 75 178]/255;
+% quiver(coords(1), coords(2), trial_vectors(1)*100, trial_vectors(2)*100, 'MaxHeadSize', 0.5, 'Linewidth', 3, 'Color', 'k');
+% axis equal;
+% ax = gca; 
 
 %TODO: plot these vectors from origin--> location
 %TODO: label and place on ankle of stick figure

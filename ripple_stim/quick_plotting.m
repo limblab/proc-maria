@@ -1,3 +1,6 @@
+
+load('/Users/mariajantz/Documents/Work/stim_arrays/stance_twothirds.mat')
+
 sq = [zeros(1, 50) ones(1, 50)];
 color1 = [12 100 133]/255; %stance
 color2 = [191 29 41]/255; %swing

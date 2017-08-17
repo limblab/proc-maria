@@ -46,7 +46,7 @@ function [fhandle, footStrike, footOff] = saveGaitMovie( data, freq, overlay, fi
         Z = cell2mat(cellfun(@(x)x(:,3),data,'UniformOutput', false));
         h = line(X(1,:),Y(1,:),Z(1,:),'Marker','o');
     else
-        h = line(X(1,:),Y(1,:),'Marker','o', 'LineWidth', 2);
+        h = line(X(1,:),Y(1,:),'Marker','o', 'LineWidth', 2, 'Color', 'k');
     end    
     
     %set(h, 'linewidth', 3); 

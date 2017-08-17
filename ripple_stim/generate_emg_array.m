@@ -148,18 +148,18 @@ legendinfo{end+1} = 'IP';
 % emg_array{ch2}(indices) = 0; 
 
 %% "Squish" part of the array relative to the other
-% scale_fact = .5; %scale the indices selected by this factor
-% scale_start = 300; %indices to scale from the array as it exists
-% scale_end = length(emg_array{1});
-% 
-% x = 1:1:(scale_end-scale_start+1);
-% xq = 1/scale_fact:1/scale_fact:(scale_end-scale_start);
-% 
-% for i=1:length(emg_array)
-%     scaled = interp1(x, emg_array{i}(scale_start:scale_end), xq);
-%     emg_array{i} = [emg_array{i}(1:scale_start) scaled];
-%     
-% end
+scale_fact = .66; %scale the indices selected by this factor
+scale_start = 300; %indices to scale from the array as it exists
+scale_end = length(emg_array{1});
+
+x = 1:1:(scale_end-scale_start+1);
+xq = 1/scale_fact:1/scale_fact:(scale_end-scale_start);
+
+for i=1:length(emg_array)
+    scaled = interp1(x, emg_array{i}(scale_start:scale_end), xq);
+    emg_array{i} = [emg_array{i}(1:scale_start) scaled];
+    
+end
 
 %% Plot
 
@@ -194,7 +194,7 @@ for i=1:size(emg_array, 2)-1
     y1 = std_array{musc}(1:length(emg_array{musc}))+emg_array{musc};
     y2 = emg_array{musc}-std_array{musc}(1:length(emg_array{musc}));
     Y = [y1 fliplr(y2)];
-    X = [xvals fliplr(xvals)];
+    X = [xval_arr fliplr(xval_arr)];
     h = fill(X, Y, c_arr(i, :));
     set(h, 'facealpha', .3);
     set(h, 'EdgeColor', 'None'); 
@@ -211,7 +211,7 @@ end
 %plot(mus_mean{1,1}); hold on;
 
 %% Save array in format that is easily useable by call_emg_stim
-nsave = true;
+nsave = false;
 if nsave
 usr_in = input('Save as: ', 's');
 if ~strcmp(usr_in, 'n')
@@ -219,7 +219,7 @@ if ~strcmp(usr_in, 'n')
     p = mfilename('fullpath');
     [pathstr, name, ext] = fileparts(p);
     pathstr = [pathstr '/../..' '/../' 'stim_arrays/'];
-    save([pathstr usr_in], 'legendinfo', 'emg_array');
+    save([pathstr usr_in], 'legendinfo', 'emg_array', 'std_array');
 end
 end
 
