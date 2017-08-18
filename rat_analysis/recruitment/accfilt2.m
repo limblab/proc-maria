@@ -28,15 +28,15 @@ locs = locs+checkrange(1)-1;
 p = 1;
 
 %if that cutoff value was too high, find lower options and plot
-figure(201); hold on;
+%figure(201); hold on;
 if length(pks)==0
-    findpeaks(fdata.mag.vel, 'MinPeakHeight', 0.05)
+    %findpeaks(fdata.mag.vel, 'MinPeakHeight', 0.05)
     [pks, locs] = findpeaks(fdata.mag.vel(checkrange), 'MinPeakHeight', 0.05);
     locs = locs+(checkrange(1)-1);
-    plot(locs, pks, 'o', 'color', 'r', 'linewidth', 3)
+    %plot(locs, pks, 'o', 'color', 'r', 'linewidth', 3)
 else
-    findpeaks(fdata.mag.vel, 'MinPeakHeight', 0.2)
-    plot(locs, pks, 'o', 'color', 'r', 'linewidth', 3)
+    %findpeaks(fdata.mag.vel, 'MinPeakHeight', 0.2)
+    %plot(locs, pks, 'o', 'color', 'r', 'linewidth', 3)
 end
 %if that cutoff is still too high, there was basically no movement -
 %set to zero
@@ -56,8 +56,8 @@ elseif pks(p)<0.4
         disp('Values of the highest indices');
         a = [sorted(1:6), round(sortingIndices(1:6), 0)]
     end
-    p=input('Which peak should be used for calculation of initial acceleration? (For other index type 100): ');
-    
+    %p=input('Which peak should be used for calculation of initial acceleration? (For other index type 100): ');
+    p=1; 
 end
 
 if p==100

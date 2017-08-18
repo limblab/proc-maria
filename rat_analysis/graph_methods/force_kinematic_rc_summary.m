@@ -5,9 +5,9 @@
 clear all; 
 
 %set variables for each run
-filedate = '170418';
-startnum = 74;
-muscle = 'ST';
+filedate = '170126';
+startnum = 31;
+muscle = 'VL';
 
 %set paths
 path = '/Users/mariajantz/Documents/Work/data/';
@@ -141,7 +141,7 @@ for i=1:length(stim_vals)
     if i~=length(stim_vals)
         close([77]);
     end
-    close(201);
+    %close(201);
 end
 
 figure(62); 
