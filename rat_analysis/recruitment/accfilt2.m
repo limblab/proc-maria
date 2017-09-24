@@ -30,13 +30,13 @@ p = 1;
 %if that cutoff value was too high, find lower options and plot
 %figure(201); hold on;
 if length(pks)==0
-    %findpeaks(fdata.mag.vel, 'MinPeakHeight', 0.05)
+    findpeaks(fdata.mag.vel, 'MinPeakHeight', 0.05)
     [pks, locs] = findpeaks(fdata.mag.vel(checkrange), 'MinPeakHeight', 0.05);
     locs = locs+(checkrange(1)-1);
-    %plot(locs, pks, 'o', 'color', 'r', 'linewidth', 3)
+    plot(locs, pks, 'o', 'color', 'r', 'linewidth', 3)
 else
-    %findpeaks(fdata.mag.vel, 'MinPeakHeight', 0.2)
-    %plot(locs, pks, 'o', 'color', 'r', 'linewidth', 3)
+    findpeaks(fdata.mag.vel, 'MinPeakHeight', 0.2)
+    plot(locs, pks, 'o', 'color', 'r', 'linewidth', 3)
 end
 %if that cutoff is still too high, there was basically no movement -
 %set to zero
@@ -114,10 +114,13 @@ traceacc = fdata.mag.acc(locs(p)-idx-1:locs(p)-1);
 
 %fdata.locs.rng = (locs(p)-idx):locs(p);
 %TODO: filtered version too
+aidx = 20; 
+
 fdata.pks.vloc = locs(p); 
-apk_arr = fdata.mag.dvel((fdata.pks.vloc-5):(fdata.pks.vloc+1)); 
+fdata.pks.vval = fdata.mag.vel(locs(p)); 
+apk_arr = fdata.mag.dvel((fdata.pks.vloc-aidx):(fdata.pks.vloc+1)); 
 [fdata.pks.aval, fdata.pks.aloc] = max(apk_arr);
-fdata.pks.aloc = fdata.pks.aloc + fdata.pks.vloc-6;
+fdata.pks.aloc = fdata.pks.aloc + fdata.pks.vloc-aidx-1;
 fdata.pks.amean = mean(fdata.mag.dvel((fdata.pks.aloc-1):(fdata.pks.aloc+1)));
 %TODO avg either side
 %hmm. okay. Why does the other version track so much more closely?

@@ -6,8 +6,8 @@ clear all;
 
 %set variables for each run
 filedate = '170126';
-startnum = 31;
-muscle = 'VL';
+startnum = 16;
+muscle = 'IP';
 
 %set paths
 path = '/Users/mariajantz/Documents/Work/data/';

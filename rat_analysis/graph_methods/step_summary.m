@@ -8,18 +8,18 @@ clear all; close all;
 
 %set variables for each run
 
-pkdist = 120;
+pkdist = 80;
 pkwid = 10; 
 err_trials = []; %rig this up for catching errored trials
 numsteps = 10; 
 
 %filedates = {'160908', '161006', '161101', '161116', '170406'};
-filedates = '170713';
+filedates = '170715';
 %filenums = [41:166];
-%really messed up trials: 66
+%fix for 7-15: 117, 131cl
 %need larger peak distance: 81
 %filenums = [85:87 112 117 131 153 157 159 165 166];
-filenums = 42; 
+filenums = [131]; 
 
 for f=1:length(filenums)
     filenum = filenums(f);
@@ -41,8 +41,9 @@ for f=1:length(filenums)
         %next draw all traces for a trial, relative to the hip marker at zero
         figure(1); subplot(4, 4, [3 4 7 8 11 12]); hold on;
         rel_endpoint = rat.toe-rat.hip_bottom;
-        finpt = min(6000, size(rel_endpoint, 1)); 
-        plot(rel_endpoint(1:finpt, 1), rel_endpoint(1:finpt, 2))
+        %pltrang = 1:min(6000, size(rel_endpoint, 1)); 
+        pltrang = 1:size(rel_endpoint, 1); 
+        plot(rel_endpoint(pltrang, 1), rel_endpoint(pltrang, 2))
         title([filedate ' Trial ' num2str(filenum)]);
         
         %on that graph, plot the high/low and front/back points (for height and length)
@@ -54,10 +55,10 @@ for f=1:length(filenums)
         
         pk_positions = struct();
         figure(2); subplot(2, 2, 1); hold on;
-        findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', pkwid)
+        findpeaks(rel_endpoint(pltrang, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', pkwid)
         title('Back peaks');
-        [pk_positions.b_pks, pk_positions.b_locs] = findpeaks(rel_endpoint(1:finpt, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', pkwid);
-        inv_arr = max(rel_endpoint(1:finpt, 1))*1.01 - rel_endpoint(1:finpt, 1);
+        [pk_positions.b_pks, pk_positions.b_locs] = findpeaks(rel_endpoint(pltrang, 1), 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1, 'MinPeakWidth', pkwid);
+        inv_arr = max(rel_endpoint(pltrang, 1))*1.01 - rel_endpoint(pltrang, 1);
         subplot(2, 2, 2); findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1)
         title('Forward peaks');
         [f_pks, pk_positions.f_locs] = findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist, 'MinPeakProminence', 1); 
@@ -87,9 +88,9 @@ for f=1:length(filenums)
         %TODO: SWITCH THIS BACK VERY IMPORTANT
         %TODO: FIGURE OUT WHY THIS NEEDS TO BE SWITCHED AND WHAT'S
         %HAPPENING
-         b_vals = sort(pk_positions.b_locs(1:numsteps+1));
-         b_vals = b_vals(2:end); 
-        sw_idx = [f_vals(1:numsteps) b_vals(1:numsteps)];
+        b_vals = sort(pk_positions.b_locs(1:numsteps));
+        b_vals = b_vals(2:end); 
+        sw_idx = [f_vals(1:numsteps-1) b_vals(1:numsteps-1)];
         
         %choose indices to exclude when determining high peaks - otherwise the back
         %swing of the foot gets included
@@ -100,7 +101,7 @@ for f=1:length(filenums)
         h_arr = {};
         k_arr = {};
         a_arr = {};
-        for i=1:numsteps-1
+        for i=1:numsteps-2
             subplot(1, 3, 1); hold on;
             plot(rat.angles.hip(sw_idx(i, 1):sw_idx(i+1, 1)));
             h_arr{i} = rat.angles.hip(sw_idx(i, 1):sw_idx(i+1, 1));
@@ -218,37 +219,28 @@ for f=1:length(filenums)
             %vals = [vals sw_idx(i, 2)-dist:sw_idx(i, 2)+dist];
         end
         idx = setdiff(1:size(rel_endpoint, 1), vals);
-        temp = rel_endpoint(1:finpt, 2);
+        temp = rel_endpoint(pltrang, 2);
         temp(idx) = rel_endpoint(1, 2)-100;
         
         figure(2);
         subplot(2, 2, 3); findpeaks(temp, 'SortStr', 'descend', 'MinPeakDistance', pkdist)
         title('High peaks');
         [pk_positions.h_pks, pk_positions.h_locs] = findpeaks(temp, 'SortStr', 'descend', 'MinPeakDistance', pkdist);
-        inv_arr = max(rel_endpoint(1:finpt, 2))*1.01 - rel_endpoint(1:finpt, 2);
+        inv_arr = max(rel_endpoint(pltrang, 2))*1.01 - rel_endpoint(pltrang, 2);
         subplot(2, 2, 4); findpeaks(inv_arr, 'SortStr', 'descend', 'MinPeakDistance', pkdist)
         title('Low peaks');
         %different way of finding low peaks to set window correctly
         %low peaks - this is the most effective way to find them
-        for i=1:10
+        for i=1:numsteps-1
             %find the correct section of step
             %find the minimum value and index within that section
             %subplot(4, 4, fig_idx(i)); hold on;
             disp(['Finding low peaks idx ' num2str(i)]); 
            
-                pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2));
-                pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
+            %todo: switch back to above
+            pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2));
+            pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
 %             
-%                 %manually enter the correct val
-%                 disp('Possible values'); 
-%                 %TODO: DO A SORT HERE, THEN MANUALLY PICK THE CORRECT
-%                 %VALUE. MAYBE MOVE THIS EARLIER AND JUST DO IT IF THE AUTO
-%                 %OPTIONS DON'T LEAVE THEM FAIRLY EVENLY SPACED. YEAH. DO
-%                 %THAT.
-%                 disp(mat2str(sort(pk_positions.l_locs))); 
-%                 pk_positions.l_locs(i) = input(['Correct index of peak #' num2str(i) ': ']);
-%                 pk_positions.l_pks(i) = find(pk_positions.l_locs(i)==rel_endpoint(sw_idx(i, 1):sw_idx(i, 2), 2))+sw_idx(i, 1)-1;
-            
             %pk_positions.l_pks(i) = min(rel_endpoint(sw_idx(i, 2):sw_idx(i+1, 1), 2))
             %pk_positions.l_locs(i) = find(pk_positions.l_pks(i)==rel_endpoint(sw_idx(i, 2):sw_idx(i+1, 2), 2))+sw_idx(i, 1)-1;
             
@@ -267,17 +259,32 @@ for f=1:length(filenums)
         else
             temph = sort(pk_positions.h_locs); 
         end
+        
+        %autoplace markers
+        figure;
+        plot(rat.toe(:, 1), rat.toe(:, 2)); hold on; 
+        autoplace = false; 
+        if autoplace
+            for i = 1:numsteps-1
+                chooseloc = 20; 
+                pk_positions.h_pks(i) = rel_endpoint((sw_idx(i, 1)+chooseloc), 2);
+                pk_positions.h_locs(i) = find(pk_positions.h_pks(i)==rel_endpoint((sw_idx(i, 1)+chooseloc), 2))+sw_idx(i, 1)+chooseloc-1;
+                plot(rat.toe(pk_positions.h_locs(i), 1), rat.toe(pk_positions.h_locs(i), 1)); 
+                
+            end
+        end
+        
         %place pk positions at correct locations between loops
         j = 1; 
-        sw_idx(:, 3) = ones(numsteps, 1);
-        for i=1:numsteps-1
+        sw_idx(:, 3) = ones(numsteps-1, 1);
+        for i=1:numsteps-2
             if ismember(temph(j), sw_idx(i, 2):sw_idx(i+1, 1))
                 sw_idx(i, 3) = temph(j); 
                 j = j+1; 
             end 
         end
         if size(pk_positions.l_locs, 1)==numsteps-1
-            sw_idx(:, 4) = [sort(pk_positions.l_locs(1:numsteps-1)); 1];
+            sw_idx(:, 4) = [sort(pk_positions.l_locs(1:numsteps-2)); 1];
         else 
             sw_idx(:, 4) = sort(pk_positions.l_locs(1:numsteps));
         end
@@ -341,7 +348,7 @@ for f=1:length(filenums)
         
         %%%
         figure(4); hold on; %step plotted on equal axes
-        plot(rel_endpoint(1:finpt, 1), rel_endpoint(1:finpt, 2)); 
+        plot(rel_endpoint(pltrang, 1), rel_endpoint(pltrang, 2)); 
         plot(mn_endpt(1, :), mn_endpt(2, :), 'linewidth', 3, 'color', 'k');
         title([filedate ' Trial ' num2str(filenum)]);
         ylim([-95 0]);

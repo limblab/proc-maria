@@ -4,7 +4,7 @@ err_trials = []; %rig this up for removing steps from set
 numsteps = 11;
 
 filedate_val = '170713';
-trials = [103:107];
+trials = [61:65];
 ax_check = 1; %1 for length (x), 2 for height (y); 
 sumpath = '/Users/mariajantz/Documents/Work/data/kinematics/processed_summary/summary_steps.mat';
 load(sumpath);
@@ -33,6 +33,7 @@ for i=1:length(trials)
     hvals(i) = mean(extreme_vals{date_idx(tr_idx)}.hi(:, 2)-(extreme_vals{date_idx(tr_idx)}.lo(:, 2)));
     hstd(i) = std(extreme_vals{date_idx(tr_idx)}.hi(:, 2)-(extreme_vals{date_idx(tr_idx)}.lo(:, 2)));
     
+    hi_pts(:, i) = extreme_vals{date_idx(tr_idx)}.hi(:, 2); 
     %plot the mean of the trial
     figure(31);
     %calculate and draw average trace of trial minus 1st and last step
@@ -79,6 +80,23 @@ figure(33);
 xlim(ax_x);
 ylim(ax_y);
 legend(legendinfo); axis equal
+
+%add height change from null
+figure; 
+h_change = mean(hi_pts - mean(hi_pts(:, 1))); 
+h_change_dev = std(hi_pts - mean(hi_pts(:, 1))); 
+figure(1); hold on;
+bar(h_change(2:end));
+errorbar(1:length(trials)-1, h_change(2:end), h_change_dev(2:end), '.', 'linewidth', 4)
+ax = gca;
+ylabel('Height change from standard (mm)');
+xlabel('Stimulation change from standard for IP, ST, TA');
+title(['Height variation ' filedate_val]);
+%lbls = cellfun(@(x) x.trial, trialname(idx(:, 2)), 'UniformOutput', 0)
+set(ax, 'XTick', [1:length(trials)-1]);
+set(ax, 'XTickLabel', {'120%', '140%', '160%', '180%'});
+set(ax, 'fontsize', 20);
+set(gca,'TickDir','out');
 
 %add bar chart
 figure(1); hold on;

@@ -2,11 +2,11 @@
 %define necessary import variables
 filedate = '170715';
 ratName = [filedate(1:2) '-' filedate(3:4) '-' filedate(5:6)];
-filenum = 1:166; %can input an array if desired
+filenum = 66; %can input an array if desired
 sample_freq = 200; %give this value in Hz
 savepath = '/Users/mariajantz/Documents/Work/data/kinematics/processed/'; 
-import_vicon = true; 
-split_steps = false; 
+import_vicon = false; 
+split_steps = true; 
 
 
 if import_vicon
